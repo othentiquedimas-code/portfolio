@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Administration Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap 5 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Toastr pour les notifications -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"
+    />
+    <link rel="stylesheet" href="css/admin.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          <div class="admin-container">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+              <h1 class="h3 mb-0">
+                <i class="fas fa-cog me-2"></i>Administration Portfolio
+              </h1>
+              <button id="logoutBtn" class="btn btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+              </button>
+            </div>
+
+            <!-- Navigation Admin -->
+            <ul class="nav nav-tabs mb-4" id="adminTabs">
+              <li class="nav-item">
+                <button
+                  class="nav-link active"
+                  data-bs-toggle="tab"
+                  data-bs-target="#addProject"
+                >
+                  <i class="fas fa-plus-circle me-2"></i>Ajouter un projet
+                </button>
+              </li>
+              <li class="nav-item">
+                <button
+                  class="nav-link"
+                  data-bs-toggle="tab"
+                  data-bs-target="#listProjects"
+                >
+                  <i class="fas fa-list me-2"></i>Gérer les projets
+                </button>
+              </li>
+            </ul>
+
+            <!-- Contenu des onglets -->
+            <div class="tab-content">
+              <!-- Formulaire d'ajout de projet -->
+              <div class="tab-pane fade show active" id="addProject">
+                <h3 class="h4 mb-4">Nouveau projet</h3>
+                <form id="projectForm">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Titre du projet *</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="title"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Catégorie</label>
+                      <select class="form-select" id="category">
+                        <option value="fullstack">Full-Stack</option>
+                        <option value="frontend">Frontend</option>
+                        <option value="backend">Backend</option>
+                        <option value="mobile">Mobile</option>
+                        <option value="design">Design</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Description courte *</label>
+                    <textarea
+                      class="form-control"
+                      id="short_description"
+                      rows="2"
+                      maxlength="500"
+                      required
+                    ></textarea>
+                    <small class="text-muted">Maximum 500 caractères</small>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Description complète *</label>
+                    <textarea
+                      class="form-control"
+                      id="full_description"
+                      rows="5"
+                      required
+                    ></textarea>
+                  </div>
+
+                  <!-- Dans le formulaire d'ajout de projet -->
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Image principale</label>
+
+                      <!-- Prévisualisation -->
+                      <div class="mb-2">
+                        <img
+                          id="mainImagePreview"
+                          src=""
+                          alt="Aperçu"
+                          style="
+                            max-width: 100%;
+                            max-height: 200px;
+                            display: none;
+                          "
+                          class="rounded border"
+                        />
+                      </div>
+
+                      <!-- Bouton d'upload -->
+                      <div class="input-group">
+                        <input
+                          type="file"
+                          class="form-control"
+                          id="mainImageInput"
+                          accept="image/*"
+                        />
+                        <button
+                          class="btn btn-outline-secondary"
+                          type="button"
+                          onclick="document.getElementById('mainImageInput').click()"
+                        >
+                          <i class="fas fa-upload"></i> Uploader
+                        </button>
+                      </div>
+
+                      <!-- Champ URL (rempli automatiquement) -->
+                      <input
+                        type="hidden"
+                        class="form-control mt-2"
+                        id="main_image_url"
+                      />
+                      <small class="text-muted"
+                        >Format: JPG, PNG, GIF, WebP (max 5MB)</small
+                      >
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Miniature</label>
+
+                      <!-- Prévisualisation -->
+                      <div class="mb-2">
+                        <img
+                          id="thumbnailPreview"
+                          src=""
+                          alt="Aperçu miniature"
+                          style="
+                            max-width: 100%;
+                            max-height: 150px;
+                            display: none;
+                          "
+                          class="rounded border"
+                        />
+                      </div>
+
+                      <!-- Bouton d'upload -->
+                      <div class="input-group">
+                        <input
+                          type="file"
+                          class="form-control"
+                          id="thumbnailImageInput"
+                          accept="image/*"
+                        />
+                        <button
+                          class="btn btn-outline-secondary"
+                          type="button"
+                          onclick="document.getElementById('thumbnailImageInput').click()"
+                        >
+                          <i class="fas fa-upload"></i> Uploader
+                        </button>
+                      </div>
+
+                      <!-- Champ URL (rempli automatiquement) -->
+                      <input
+                        type="hidden"
+                        class="form-control mt-2"
+                        id="thumbnail_url"
+                      />
+                      <small class="text-muted"
+                        >Générée automatiquement si laissée vide</small
+                      >
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">URL GitHub</label>
+                      <input
+                        type="url"
+                        class="form-control"
+                        id="github_url"
+                        placeholder="https://github.com/..."
+                      />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">URL de démo</label>
+                      <input
+                        type="url"
+                        class="form-control"
+                        id="demo_url"
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+
+                  <!-- NOUVEAUX CHAMPS AJOUTÉS -->
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label class="form-label">Nom du client</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="client_name"
+                        placeholder="Nom du client ou entreprise"
+                      />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label class="form-label">Date du projet</label>
+                      <input
+                        type="date"
+                        class="form-control"
+                        id="project_date"
+                      />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label class="form-label">Ordre d'affichage</label>
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="display_order"
+                        value="0"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          id="featured"
+                        />
+                        <label class="form-check-label">
+                          <i class="fas fa-star text-warning me-1"></i>Mettre en
+                          avant
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Statut</label>
+                      <select class="form-select" id="status">
+                        <option value="published">Publié</option>
+                        <option value="draft">Brouillon</option>
+                        <option value="archived">Archivé</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Technologies utilisées</label>
+                    <div id="technologiesContainer">
+                      <div class="input-group mb-2">
+                        <input
+                          type="text"
+                          class="form-control technology-input"
+                          placeholder="Ex: React, Node.js..."
+                        />
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary"
+                          onclick="addTechnology()"
+                        >
+                          <i class="fas fa-plus"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <small class="text-muted"
+                      >Appuyez sur Entrée ou cliquez sur + pour ajouter</small
+                    >
+                  </div>
+
+                  <div class="mb-4">
+                    <label class="form-label"
+                      >Fonctionnalités principales</label
+                    >
+                    <div id="featuresContainer">
+                      <div class="input-group mb-2">
+                        <input
+                          type="text"
+                          class="form-control feature-input"
+                          placeholder="Ex: Authentification, Dashboard..."
+                        />
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary"
+                          onclick="addFeature()"
+                        >
+                          <i class="fas fa-plus"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex gap-3">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fas fa-save me-2"></i>Enregistrer le projet
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      onclick="resetForm()"
+                    >
+                      <i class="fas fa-redo me-2"></i>Réinitialiser
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Liste des projets -->
+              <div class="tab-pane fade" id="listProjects">
+                <h3 class="h4 mb-4">Projets existants</h3>
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Titre</th>
+                        <th>Catégorie</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                      <!-- Les projets seront chargés ici -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="js/admin.js"></script>
+  </body>
+</html>

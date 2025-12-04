@@ -6,13 +6,12 @@ class User
     private $conn;
     private $table_name = "users";
 
+    // Propriétés EXACTEMENT comme votre table
     public $id;
-    public $uuid;
-    public $first_name;
-    public $last_name;
+    public $username;
     public $email;
     public $password_hash;
-    public $timezone;
+    public $role;
     public $created_at;
 
     public function __construct()
@@ -21,75 +20,69 @@ class User
         $this->conn = $database->getConnection();
     }
 
-    // Méthode d'inscription
-    public function register($first_name, $last_name, $email, $password, $timezone)
-    {
-        try {
-            // Vérifier si l'email existe déjà
-            if ($this->emailExists($email)) {
-                throw new Exception("Cet email est déjà utilisé.");
-            }
+    /**
+     * Méthode pour créer un nouvel utilisateur
+     */
+    // public function create($username, $email, $password)
+    // {
+    //     try {
+    //         // Vérifier si l'email existe déjà
+    //         if ($this->emailExists($email)) {
+    //             throw new Exception("Cet email est déjà utilisé.");
+    //         }
 
-            // Hasher le mot de passe
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+    //         // Vérifier si le username existe déjà
+    //         if ($this->usernameExists($username)) {
+    //             throw new Exception("Ce nom d'utilisateur est déjà pris.");
+    //         }
 
-            // Générer UUID
-            $uuid = $this->generateUUID();
+    //         // Hasher le mot de passe
+    //         $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-            // Requête d'insertion
-            $query = "INSERT INTO " . $this->table_name . " 
-                     SET uuid = :uuid, first_name = :first_name, last_name = :last_name, 
-                         email = :email, password_hash = :password_hash, timezone = :timezone";
+    //         // Requête d'insertion
+    //         $query = "INSERT INTO " . $this->table_name . " 
+    //                  SET username = :username, 
+    //                      email = :email, 
+    //                      password_hash = :password_hash,
+    //                      role = 'admin'";
 
-            $stmt = $this->conn->prepare($query);
+    //         $stmt = $this->conn->prepare($query);
 
-            // Nettoyer et binder les données
-            $stmt->bindParam(":uuid", $uuid);
-            $stmt->bindParam(":first_name", htmlspecialchars(strip_tags($first_name)));
-            $stmt->bindParam(":last_name", htmlspecialchars(strip_tags($last_name)));
-            $stmt->bindParam(":email", htmlspecialchars(strip_tags($email)));
-            $stmt->bindParam(":password_hash", $password_hash);
-            $stmt->bindParam(":timezone", $timezone);
+    //         // Nettoyer et binder les données
+    //         $cleanUsername = htmlspecialchars(strip_tags($username));
+    //         $cleanEmail = htmlspecialchars(strip_tags($email));
 
-            if ($stmt->execute()) {
-                $this->id = $this->conn->lastInsertId();
-              
-                // Décommenté les lignes suivantes si on souhaite hydrater l'objet user apres création ou les maintenir tous à null après inserction 
-               
-                // $this->uuid = $uuid;
-                // $this->first_name = $first_name;
-                // $this->last_name = $last_name;
-                // $this->email = $email;
-                // $this->timezone = $timezone;
-                return true;
-            }
+    //         $stmt->bindParam(":username", $cleanUsername);
+    //         $stmt->bindParam(":email", $cleanEmail);
+    //         $stmt->bindParam(":password_hash", $password_hash);
 
-            return false;
-        } catch (PDOException $e) {
-            throw new Exception("Erreur base de données: " . $e->getMessage());
-        }
-    }
+    //         if ($stmt->execute()) {
+    //             $this->id = $this->conn->lastInsertId();
+    //             $this->username = $username;
+    //             $this->email = $email;
+    //             $this->role = 'admin';
+                
+    //             return $this->id;
+    //         }
 
-    // Vérifier si l'email existe
-    private function emailExists($email)
-    {
-        $query = "SELECT id FROM " . $this->table_name . " WHERE email = :email LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":email", $email);
-        $stmt->execute();
+    //         return false;
+    //     } catch (PDOException $e) {
+    //         throw new Exception("Erreur base de données: " . $e->getMessage());
+    //     }
+    // }
 
-        return $stmt->rowCount() > 0;
-    }
-
-    // Méthode de connexion
+    /**
+     * Méthode de connexion
+     */
     public function login($email, $password)
     {
-        $query = "SELECT id, uuid, first_name, last_name, email, password_hash, timezone, created_at 
+        $query = "SELECT id, username, email, password_hash, role, created_at 
                   FROM " . $this->table_name . " 
                   WHERE email = :email LIMIT 1";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":email", $email);
+        $cleanEmail = htmlspecialchars(strip_tags($email));
+        $stmt->bindParam(":email", $cleanEmail);
         $stmt->execute();
 
         if ($stmt->rowCount() == 1) {
@@ -97,15 +90,13 @@ class User
 
             // Vérifier le mot de passe
             if (password_verify($password, $row['password_hash'])) {
-                // Hydrater l'objet
+                // Hydrater l'objet avec les données de la table
                 $this->id = $row['id'];
-                $this->uuid = $row['uuid'];
-                $this->first_name = $row['first_name'];
-                $this->last_name = $row['last_name'];
+                $this->username = $row['username'];
                 $this->email = $row['email'];
-                $this->timezone = $row['timezone'];
+                $this->role = $row['role'];
                 $this->created_at = $row['created_at'];
-
+                
                 return true;
             }
         }
@@ -113,18 +104,134 @@ class User
         return false;
     }
 
-    // Générer UUID
-    private function generateUUID()
+    /**
+     * Vérifier si l'email existe déjà
+     */
+    public function emailExists($email)
     {
-        if (function_exists('com_create_guid')) {
-            return trim(com_create_guid(), '{}');
+        $query = "SELECT id FROM " . $this->table_name . " WHERE email = :email LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $cleanEmail = htmlspecialchars(strip_tags($email));
+        $stmt->bindParam(":email", $cleanEmail);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Vérifier si le username existe déjà
+     */
+    public function usernameExists($username)
+    {
+        $query = "SELECT id FROM " . $this->table_name . " WHERE username = :username LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $cleanUsername = htmlspecialchars(strip_tags($username));
+        $stmt->bindParam(":username", $cleanUsername);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Récupérer un utilisateur par ID
+     */
+    public function getById($id)
+    {
+        $query = "SELECT id, username, email, role, created_at 
+                  FROM " . $this->table_name . " 
+                  WHERE id = :id LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $id);
+        $stmt->execute();
+
+        if ($stmt->rowCount() == 1) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
-        $data = random_bytes(16);
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return null;
+    }
 
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    /**
+     * Récupérer un utilisateur par email
+     */
+    public function getByEmail($email)
+    {
+        $query = "SELECT id, username, email, role, created_at 
+                  FROM " . $this->table_name . " 
+                  WHERE email = :email LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $cleanEmail = htmlspecialchars(strip_tags($email));
+        $stmt->bindParam(":email", $cleanEmail);
+        $stmt->execute();
+
+        if ($stmt->rowCount() == 1) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        return null;
+    }
+
+    /**
+     * Mettre à jour le mot de passe
+     */
+    public function updatePassword($id, $new_password)
+    {
+        try {
+            $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+            
+            $query = "UPDATE " . $this->table_name . " 
+                      SET password_hash = :password_hash 
+                      WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":password_hash", $password_hash);
+            $stmt->bindParam(":id", $id);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la mise à jour du mot de passe: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Mettre à jour les informations de l'utilisateur
+     */
+    public function update($id, $username = null, $email = null)
+    {
+        try {
+            $updates = [];
+            $params = [':id' => $id];
+            
+            if ($username !== null) {
+                $updates[] = "username = :username";
+                $params[':username'] = htmlspecialchars(strip_tags($username));
+            }
+            
+            if ($email !== null) {
+                $updates[] = "email = :email";
+                $params[':email'] = htmlspecialchars(strip_tags($email));
+            }
+            
+            if (empty($updates)) {
+                return false;
+            }
+            
+            $query = "UPDATE " . $this->table_name . " 
+                      SET " . implode(", ", $updates) . " 
+                      WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la mise à jour: " . $e->getMessage());
+        }
     }
 
     // Fermer la connexion
