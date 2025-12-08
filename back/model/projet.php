@@ -218,6 +218,18 @@ class Project
         }
     }
 
+    public function deletePermanent($id)
+    {
+        try {
+            $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":id", $id);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la suppression définitive: " . $e->getMessage());
+        }
+    }
+
     // Récupérer tous les projets (pour l'admin)
     public function getAll($limit = 100)
     {
@@ -239,7 +251,7 @@ class Project
 
         return $projects;
     }
-    
+
     public function getById($id)
     {
         $query = "SELECT * FROM " . $this->table_name . " 

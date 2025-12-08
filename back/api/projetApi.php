@@ -37,32 +37,41 @@ if (session_status() === PHP_SESSION_NONE) {
 $action = $_GET['action'] ?? '';
 
 try {
-   switch ($action) {
-    case 'create':
-        handleProjectCreate();
-        break;
-        
-    case 'list':
-        handlePublicProjectList();
-        break;
+    switch ($action) {
+        case 'create':
+            handleProjectCreate();
+            break;
+
+        case 'list':
+            handlePublicProjectList();
+            break;
 
         case 'admin_list':
-        handleAdminProjectList();
-        break;
-        
-    case 'get':           // ← ANCIEN (pour public par slug)
-        handleProjectGet();
-        break;
-        
-    case 'admin_get':     // ← NOUVEAU (pour admin par ID)
-        handleAdminProjectGet();
-        break;
-        
-    case 'update':
-        handleProjectUpdate();
-        break;
-        
+            handleAdminProjectList();
+            break;
 
+        case 'get':           // ← ANCIEN (pour public par slug)
+            handleProjectGet();
+            break;
+
+        case 'admin_get':     // ← NOUVEAU (pour admin par ID)
+            handleAdminProjectGet();
+            break;
+
+        case 'update':
+            handleProjectUpdate();
+            break;
+
+        case 'delete':
+            handleProjectDelete();
+            break;
+
+        case 'restore':
+            handleProjectRestore();
+            break;
+        case 'delete_permanent':
+            handleProjectDeletePermanent();
+            break;
     }
 } catch (Exception $e) {
     http_response_code(500);
@@ -86,7 +95,7 @@ function handleProjectCreate()
     }
 
     $input = json_decode(file_get_contents("php://input"), true);
-    
+
     if (!$input) {
         http_response_code(400);
         echo json_encode([
@@ -113,7 +122,7 @@ function handleProjectCreate()
 
     try {
         $projectId = $project->create($input);
-        
+
         if ($projectId) {
             echo json_encode([
                 'success' => true,
@@ -149,12 +158,12 @@ function handleProjectList()
     }
 
     $project = new Project();
-    
+
     try {
         // Utiliser la méthode getAll() de la classe Project
         // Note: Vous devez ajouter une méthode getAll() à votre classe Project
         $projects = $project->getAll();
-        
+
         echo json_encode([
             'success' => true,
             'projects' => $projects
@@ -172,10 +181,10 @@ function handleProjectList()
 function handlePublicProjectList()
 {
     $project = new Project();
-    
+
     try {
         $projects = $project->getAllPublished();
-        
+
         echo json_encode([
             'success' => true,
             'projects' => $projects
@@ -192,10 +201,10 @@ function handlePublicProjectList()
 function handleAdminProjectList()
 {
     $project = new Project();
-    
+
     try {
         $projects = $project->getAll();
-        
+
         echo json_encode([
             'success' => true,
             'projects' => $projects
@@ -214,7 +223,7 @@ function handleProjectGet()
 {
     // Pour les projets publics, pas besoin d'authentification
     $slug = $_GET['slug'] ?? '';
-    
+
     if (empty($slug)) {
         http_response_code(400);
         echo json_encode([
@@ -225,10 +234,10 @@ function handleProjectGet()
     }
 
     $project = new Project();
-    
+
     try {
         $projectData = $project->getBySlug($slug);
-        
+
         if ($projectData) {
             echo json_encode([
                 'success' => true,
@@ -264,7 +273,7 @@ function handleAdminProjectGet()
 
     // Récupérer l'ID depuis GET
     $id = $_GET['id'] ?? null;
-    
+
     if (!$id || !is_numeric($id)) {
         http_response_code(400);
         echo json_encode([
@@ -275,10 +284,10 @@ function handleAdminProjectGet()
     }
 
     $project = new Project();
-    
+
     try {
         $projectData = $project->getById($id);
-        
+
         if ($projectData) {
             echo json_encode([
                 'success' => true,
@@ -314,7 +323,7 @@ function handleProjectUpdate()
 
     $input = json_decode(file_get_contents("php://input"), true);
     $id = $_GET['id'] ?? $input['id'] ?? null;
-    
+
     if (!$id) {
         http_response_code(400);
         echo json_encode([
@@ -325,10 +334,10 @@ function handleProjectUpdate()
     }
 
     $project = new Project();
-    
+
     try {
         $success = $project->update($id, $input);
-        
+
         if ($success) {
             echo json_encode([
                 'success' => true,
@@ -364,7 +373,7 @@ function handleProjectDelete()
 
     $input = json_decode(file_get_contents("php://input"), true);
     $id = $_GET['id'] ?? $input['id'] ?? null;
-    
+
     if (!$id) {
         http_response_code(400);
         echo json_encode([
@@ -375,10 +384,10 @@ function handleProjectDelete()
     }
 
     $project = new Project();
-    
+
     try {
         $success = $project->delete($id);
-        
+
         if ($success) {
             echo json_encode([
                 'success' => true,
@@ -399,4 +408,70 @@ function handleProjectDelete()
         ]);
     }
 }
-?>
+
+// Fonction de restauration
+function handleProjectRestore()
+{
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Non autorisé']);
+        return;
+    }
+
+    $input = json_decode(file_get_contents("php://input"), true);
+    $id = $_GET['id'] ?? $input['id'] ?? null;
+
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'ID manquant']);
+        return;
+    }
+
+    $project = new Project();
+    try {
+        $success = $project->update($id, ['status' => $input['status'] ?? 'draft']);
+
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Projet restauré']);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Erreur de restauration']);
+        }
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+}
+
+// Fonction de suppression définitive (optionnelle)
+function handleProjectDeletePermanent()
+{
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Non autorisé']);
+        return;
+    }
+
+    $id = $_GET['id'] ?? null;
+
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'ID manquant']);
+        return;
+    }
+
+    $project = new Project();
+    try {
+        $success = $project->deletePermanent($id);
+
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Projet supprimé définitivement']);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Erreur de suppression']);
+        }
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+}
