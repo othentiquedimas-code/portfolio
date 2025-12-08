@@ -370,6 +370,371 @@
       </div>
     </div>
 
+    <!-- Modal Édition Projet -->
+    <!-- Modal Édition Projet -->
+    <div class="modal fade" id="editProjectModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-edit me-2"></i>Modifier le projet
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="editProjectForm">
+              <input type="hidden" id="edit_project_id" />
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Titre du projet *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="edit_title"
+                    required
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Catégorie</label>
+                  <select class="form-select" id="edit_category">
+                    <option value="fullstack">Full-Stack</option>
+                    <option value="frontend">Frontend</option>
+                    <option value="backend">Backend</option>
+                    <option value="mobile">Mobile</option>
+                    <option value="design">Design</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Description courte *</label>
+                <textarea
+                  class="form-control"
+                  id="edit_short_description"
+                  rows="2"
+                  maxlength="500"
+                  required
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Description complète *</label>
+                <textarea
+                  class="form-control"
+                  id="edit_full_description"
+                  rows="5"
+                  required
+                ></textarea>
+              </div>
+
+              <!-- Section Images avec Upload -->
+              <div class="row">
+                <!-- Image principale -->
+                <div class="col-md-6 mb-4">
+                  <label class="form-label">
+                    <i class="fas fa-image me-1"></i>Image principale
+                  </label>
+
+                  <!-- Prévisualisation -->
+                  <div class="mb-3">
+                    <div
+                      id="edit_main_image_preview"
+                      class="image-preview-container"
+                    >
+                      <!-- L'image sera chargée ici -->
+                    </div>
+                  </div>
+
+                  <!-- Boutons d'action -->
+                  <div class="btn-group w-100 mb-2" role="group">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      onclick="document.getElementById('edit_main_image_file').click()"
+                    >
+                      <i class="fas fa-upload me-1"></i>Uploader
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      onclick="clearEditImage('main')"
+                    >
+                      <i class="fas fa-times me-1"></i>Effacer
+                    </button>
+                  </div>
+
+                  <!-- Input fichier caché -->
+                  <input
+                    type="file"
+                    class="d-none"
+                    id="edit_main_image_file"
+                    accept="image/*"
+                  />
+
+                  <!-- Champ URL (rempli automatiquement) -->
+                  <div class="input-group mt-2">
+                    <span class="input-group-text">
+                      <i class="fas fa-link"></i>
+                    </span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="edit_main_image_url"
+                      placeholder="URL remplie automatiquement..."
+                      readonly
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-info"
+                      onclick="document.getElementById('edit_main_image_url').removeAttribute('readonly')"
+                      title="Éditer manuellement"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
+                  <small class="text-muted d-block mt-1">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Format: JPG, PNG, GIF, WebP (max 5MB)
+                  </small>
+                </div>
+
+                <!-- Miniature -->
+                <div class="col-md-6 mb-4">
+                  <label class="form-label">
+                    <i class="fas fa-image me-1"></i>Miniature
+                  </label>
+
+                  <!-- Prévisualisation -->
+                  <div class="mb-3">
+                    <div
+                      id="edit_thumbnail_preview"
+                      class="image-preview-container"
+                    >
+                      <!-- L'image sera chargée ici -->
+                    </div>
+                  </div>
+
+                  <!-- Boutons d'action -->
+                  <div class="btn-group w-100 mb-2" role="group">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      onclick="document.getElementById('edit_thumbnail_file').click()"
+                    >
+                      <i class="fas fa-upload me-1"></i>Uploader
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      onclick="clearEditImage('thumbnail')"
+                    >
+                      <i class="fas fa-times me-1"></i>Effacer
+                    </button>
+                  </div>
+
+                  <!-- Input fichier caché -->
+                  <input
+                    type="file"
+                    class="d-none"
+                    id="edit_thumbnail_file"
+                    accept="image/*"
+                  />
+
+                  <!-- Champ URL (rempli automatiquement) -->
+                  <div class="input-group mt-2">
+                    <span class="input-group-text">
+                      <i class="fas fa-link"></i>
+                    </span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="edit_thumbnail_url"
+                      placeholder="URL remplie automatiquement..."
+                      readonly
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-info"
+                      onclick="document.getElementById('edit_thumbnail_url').removeAttribute('readonly')"
+                      title="Éditer manuellement"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
+                  <small class="text-muted d-block mt-1">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Générée automatiquement si laissée vide
+                  </small>
+                </div>
+              </div>
+
+              <!-- URLs externes -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">
+                    <i class="fab fa-github me-1"></i>URL GitHub
+                  </label>
+                  <input
+                    type="url"
+                    class="form-control"
+                    id="edit_github_url"
+                    placeholder="https://github.com/..."
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">
+                    <i class="fas fa-external-link-alt me-1"></i>URL de démo
+                  </label>
+                  <input
+                    type="url"
+                    class="form-control"
+                    id="edit_demo_url"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <!-- Informations supplémentaires -->
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">
+                    <i class="fas fa-user me-1"></i>Nom du client
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="edit_client_name"
+                    placeholder="Nom du client"
+                  />
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">
+                    <i class="fas fa-calendar me-1"></i>Date du projet
+                  </label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="edit_project_date"
+                  />
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">
+                    <i class="fas fa-sort-numeric-up me-1"></i>Ordre d'affichage
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="edit_display_order"
+                    value="0"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <!-- Technologies -->
+              <div class="mb-4">
+                <label class="form-label">
+                  <i class="fas fa-code me-1"></i>Technologies utilisées
+                </label>
+                <div id="edit_technologies_container">
+                  <!-- Les champs technologies seront ajoutés ici -->
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    onclick="addEditTechnology()"
+                  >
+                    <i class="fas fa-plus me-1"></i>Ajouter une technologie
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="clearAllTechnologies()"
+                  >
+                    <i class="fas fa-trash me-1"></i>Tout effacer
+                  </button>
+                </div>
+              </div>
+
+              <!-- Fonctionnalités -->
+              <div class="mb-4">
+                <label class="form-label">
+                  <i class="fas fa-star me-1"></i>Fonctionnalités principales
+                </label>
+                <div id="edit_features_container">
+                  <!-- Les champs features seront ajoutés ici -->
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    onclick="addEditFeature()"
+                  >
+                    <i class="fas fa-plus me-1"></i>Ajouter une fonctionnalité
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="clearAllFeatures()"
+                  >
+                    <i class="fas fa-trash me-1"></i>Tout effacer
+                  </button>
+                </div>
+              </div>
+
+              <!-- Options -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="edit_featured"
+                      role="switch"
+                    />
+                    <label class="form-check-label">
+                      <i class="fas fa-star text-warning me-1"></i>Mettre en
+                      avant
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">
+                    <i class="fas fa-flag me-1"></i>Statut
+                  </label>
+                  <select class="form-select" id="edit_status">
+                    <option value="published">Publié</option>
+                    <option value="draft">Brouillon</option>
+                    <option value="archived">Archivé</option>
+                  </select>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              data-bs-dismiss="modal"
+            >
+              <i class="fas fa-times me-1"></i>Annuler
+            </button>
+            <button type="button" class="btn btn-primary" id="saveEditProject">
+              <i class="fas fa-save me-1"></i>Enregistrer les modifications
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts additionnels pour le modal -->
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>

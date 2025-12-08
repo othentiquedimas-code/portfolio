@@ -176,7 +176,7 @@ class AdminManager {
         }
         
         try {
-            const url = this.API_BASE_URL + "projetApi.php?action=list";
+            const url = this.API_BASE_URL + "projetApi.php?action=admin_list";
             console.log("📡 Chargement des projets depuis :", url);
             
             const reponse = await fetch(url, {
@@ -240,21 +240,31 @@ class AdminManager {
             projets.forEach(projet => {
                 const date = new Date(projet.created_at).toLocaleDateString("fr-FR");
                 
+                // Déterminer la couleur du badge de statut
+                let statusClass = 'bg-secondary';
+                if (projet.status === 'published') statusClass = 'bg-success';
+                if (projet.status === 'draft') statusClass = 'bg-warning';
+                if (projet.status === 'archived') statusClass = 'bg-dark';
+                
                 html += `
                     <tr>
                         <td>${projet.title}</td>
                         <td><span class="badge bg-primary">${projet.category}</span></td>
                         <td>
-                            <span class="badge ${projet.status === "published" ? "bg-success" : "bg-warning"}">
-                                ${projet.status}
+                            <span class="badge ${statusClass}">
+                                ${projet.status === 'published' ? 'Publié' : 
+                                projet.status === 'draft' ? 'Brouillon' : 
+                                projet.status === 'archived' ? 'Archivé' : projet.status}
                             </span>
                         </td>
                         <td>${date}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary">
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="window.adminManager && window.adminManager.editProject(${projet.id})">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger ms-2">
+
+                            <button class="btn btn-sm btn-outline-danger ms-2" onclick="adminManager.deleteProject(${projet.id})">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -293,6 +303,15 @@ class AdminManager {
                 e.preventDefault();
                 this.ajouterFonctionnalite();
             }
+        });
+
+          // Prévisualisation images édition
+        document.getElementById('edit_main_image_url')?.addEventListener('input', (e) => {
+            this.updateImagePreview('edit_main_image_url', 'edit_main_image_preview');
+        });
+        
+        document.getElementById('edit_thumbnail_url')?.addEventListener('input', (e) => {
+            this.updateImagePreview('edit_thumbnail_url', 'edit_thumbnail_preview');
         });
     }
 
@@ -560,6 +579,500 @@ class AdminManager {
             `;
         }
     }
+
+    async editProject(projectId) {
+        console.log("✏️ Modification du projet ID:", projectId);
+        
+        try {
+            // Récupérer les détails du projet
+            const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=admin_get&id=${projectId}`, {
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement du projet');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.openEditModal(data.project);
+            } else {
+                this.showAlert(data.error || 'Erreur lors du chargement', 'error');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            this.showAlert('Impossible de charger le projet', 'error');
+        }
+    }
+
+    openEditModal(project) {
+        console.log("📋 Ouverture modal édition:", project);
+        console.log("this est défini ?", this !== undefined);
+        
+        // Vérifiez que Bootstrap est chargé
+        console.log("Bootstrap existe ?", typeof bootstrap !== 'undefined');
+        console.log("Modal élément:", document.getElementById('editProjectModal'));
+        
+        // Remplir les champs du formulaire
+        document.getElementById('edit_project_id').value = project.id;
+        document.getElementById('edit_title').value = project.title || '';
+        document.getElementById('edit_short_description').value = project.short_description || '';
+        document.getElementById('edit_full_description').value = project.full_description || '';
+        document.getElementById('edit_category').value = project.category || 'fullstack';
+        document.getElementById('edit_main_image_url').value = project.main_image_url || '';
+        document.getElementById('edit_thumbnail_url').value = project.thumbnail_url || '';
+        document.getElementById('edit_github_url').value = project.github_url || '';
+        document.getElementById('edit_demo_url').value = project.demo_url || '';
+        document.getElementById('edit_client_name').value = project.client_name || '';
+        document.getElementById('edit_project_date').value = project.project_date || '';
+        document.getElementById('edit_display_order').value = project.display_order || 0;
+        document.getElementById('edit_featured').checked = project.featured == 1;
+        document.getElementById('edit_status').value = project.status || 'published';
+        
+        // Afficher les prévisualisations d'images
+        this.updateImagePreview('edit_main_image_url', 'edit_main_image_preview');
+        this.updateImagePreview('edit_thumbnail_url', 'edit_thumbnail_preview');
+        
+        // Charger les technologies
+        this.loadEditTechnologies(project.technologies || []);
+        
+        // Charger les fonctionnalités
+        this.loadEditFeatures(project.features || []);
+        
+         // AJOUTEZ CETTE LIGNE IMPORTANTE :
+        this.setupEditImageUploads();
+        
+        // ... mettez à jour les prévisualisations
+        this.updateEditImagePreview('main');
+        this.updateEditImagePreview('thumbnail');
+
+        // Ouvrir le modal
+        const editModal = new bootstrap.Modal(document.getElementById('editProjectModal'));
+        editModal.show();
+
+       
+        
+        // Configurer l'événement de sauvegarde
+        this.setupEditSave(project.id);
+    }
+
+    loadEditTechnologies(technologies) {
+        const container = document.getElementById('edit_technologies_container');
+        container.innerHTML = '';
+        
+        if (technologies.length === 0) {
+            this.addEditTechnologyField();
+        } else {
+            technologies.forEach(tech => {
+                this.addEditTechnologyField(tech);
+            });
+        }
+    }
+
+    loadEditFeatures(features) {
+        const container = document.getElementById('edit_features_container');
+        container.innerHTML = '';
+        
+        if (features.length === 0) {
+            this.addEditFeatureField();
+        } else {
+            features.forEach(feature => {
+                this.addEditFeatureField(feature);
+            });
+        }
+    }
+
+    addEditTechnologyField(value = '') {
+        const container = document.getElementById('edit_technologies_container');
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+            <input type="text" class="form-control edit-technology-input" 
+                value="${value}" placeholder="Ex: React, Node.js...">
+            <button class="btn btn-outline-danger" type="button" 
+                    onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(div);
+    }
+
+    addEditFeatureField(value = '') {
+        const container = document.getElementById('edit_features_container');
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+            <input type="text" class="form-control edit-feature-input" 
+                value="${value}" placeholder="Ex: Authentification, Dashboard...">
+            <button class="btn btn-outline-danger" type="button" 
+                    onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(div);
+    }
+
+    setupEditSave(projectId) {
+        const saveBtn = document.getElementById('saveEditProject');
+        
+        // Retirer les anciens écouteurs
+        saveBtn.replaceWith(saveBtn.cloneNode(true));
+        const newSaveBtn = document.getElementById('saveEditProject');
+        
+        newSaveBtn.onclick = async () => {
+            await this.saveEditProject(projectId);
+        };
+    }
+
+    async saveEditProject(projectId) {
+        try {
+            const projectData = {
+                title: document.getElementById('edit_title').value.trim(),
+                short_description: document.getElementById('edit_short_description').value.trim(),
+                full_description: document.getElementById('edit_full_description').value.trim(),
+                category: document.getElementById('edit_category').value,
+                technologies: this.getEditTechnologies(),
+                features: this.getEditFeatures(),
+                thumbnail_url: document.getElementById('edit_thumbnail_url').value.trim() || null,
+                main_image_url: document.getElementById('edit_main_image_url').value.trim() || null,
+                github_url: document.getElementById('edit_github_url').value.trim() || null,
+                demo_url: document.getElementById('edit_demo_url').value.trim() || null,
+                client_name: document.getElementById('edit_client_name').value.trim() || null,
+                project_date: document.getElementById('edit_project_date').value,
+                display_order: parseInt(document.getElementById('edit_display_order').value) || 0,
+                featured: document.getElementById('edit_featured').checked ? 1 : 0,
+                status: document.getElementById('edit_status').value
+            };
+            
+            // Validation
+            const errors = [];
+            if (!projectData.title) errors.push('Le titre est obligatoire');
+            if (!projectData.short_description) errors.push('La description courte est obligatoire');
+            if (!projectData.full_description) errors.push('La description complète est obligatoire');
+            
+            if (errors.length > 0) {
+                this.showAlert(errors.join('\n'), 'error');
+                return;
+            }
+            
+            // Bouton loading
+            const saveBtn = document.getElementById('saveEditProject');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Enregistrement...';
+            saveBtn.disabled = true;
+            
+            // Envoyer la requête
+            const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=update&id=${projectId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(projectData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showAlert('✅ Projet mis à jour avec succès', 'success');
+                
+                // Fermer le modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editProjectModal'));
+                modal.hide();
+                
+                // Recharger la liste
+                await this.chargerProjets();
+            } else {
+                this.showAlert('❌ ' + (data.error || 'Erreur lors de la mise à jour'), 'error');
+            }
+            
+        } catch (error) {
+            console.error('Erreur:', error);
+            this.showAlert('❌ Erreur serveur', 'error');
+        } finally {
+            // Restaurer le bouton
+            const saveBtn = document.getElementById('saveEditProject');
+            if (saveBtn) {
+                saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Enregistrer les modifications';
+                saveBtn.disabled = false;
+            }
+        }
+    }
+
+    getEditTechnologies() {
+        const inputs = document.querySelectorAll('#edit_technologies_container .edit-technology-input');
+        const technologies = [];
+        inputs.forEach(input => {
+            if (input.value.trim()) {
+                technologies.push(input.value.trim());
+            }
+        });
+        return technologies;
+    }
+
+    getEditFeatures() {
+        const inputs = document.querySelectorAll('#edit_features_container .edit-feature-input');
+        const features = [];
+        inputs.forEach(input => {
+            if (input.value.trim()) {
+                features.push(input.value.trim());
+            }
+        });
+        return features;
+    }
+
+  updateImagePreview(inputId, previewId) {
+    const url = document.getElementById(inputId).value;
+    const preview = document.getElementById(previewId);
+    
+    // Image de remplacement (SVG stylé)
+    const placeholderImage = `data:image/svg+xml,%3Csvg width='200' height='150' viewBox='0 0 200 150' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='200' height='150' rx='10' fill='%231E293B'/%3E%3Cpath d='M70 50H50V70H70V50Z' stroke='%23475569' stroke-width='2'/%3E%3Cpath d='M120 50L100 70L140 60L130 65L125 62.5L120 65Z' stroke='%2337A1FF' stroke-width='2'/%3E%3Ccircle cx='60' cy='60' r='5' fill='%2337A1FF'/%3E%3Cpath d='M80 90L100 110M120 90L140 110' stroke='%23475569' stroke-width='2'/%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%2394A3B8' font-size='12'%3E${encodeURIComponent(url ? 'Image configurée' : 'Aucune image')}%3C/text%3E%3C/svg%3E`;
+    
+    if (url) {
+        // Afficher TOUJOURS le placeholder, jamais l'URL réelle
+        preview.innerHTML = `
+            <div class="position-relative">
+                <img src="${placeholderImage}" alt="Placeholder" 
+                     style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+                <div class="position-absolute bottom-0 start-0 end-0 bg-black/70 text-white p-2 rounded-b-lg">
+                    <small><i class="fas fa-external-link-alt me-1"></i>${url.substring(0, 40)}${url.length > 40 ? '...' : ''}</small>
+                </div>
+            </div>
+            <div class="form-text mt-2">
+                <button class="btn btn-sm btn-outline-info me-2" onclick="window.open('${url}', '_blank')">
+                    <i class="fas fa-external-link-alt me-1"></i>Voir l'image
+                </button>
+                <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('${inputId}').value=''; adminManager.updateImagePreview('${inputId}', '${previewId}')">
+                    <i class="fas fa-trash me-1"></i>Effacer
+                </button>
+            </div>
+        `;
+    } else {
+        preview.innerHTML = `
+            <img src="${placeholderImage}" alt="Aucune image" 
+                 style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+            <div class="form-text text-center mt-2 text-gray-500">
+                <i class="fas fa-info-circle me-1"></i>Ajoutez une URL d'image
+            </div>
+        `;
+    }
+    }
+// Méthode pour vérifier si une image existe
+    async checkImageExists(url) {
+        try {
+            const response = await fetch(url, {
+                method: 'HEAD',
+                mode: 'no-cors' // Important pour éviter les problèmes CORS
+            });
+            return true;
+        } catch (error) {
+            console.log("Image non disponible:", url);
+            return false;
+        }
+    }
+
+// Dans votre classe AdminManager, AJOUTEZ CES MÉTHODES :
+
+setupEditImageUploads() {
+    console.log("⚙️ Configuration des uploads d'images...");
+    
+    // Configurer l'upload pour l'image principale
+    const mainImageInput = document.getElementById('edit_main_image_file');
+    if (mainImageInput) {
+        mainImageInput.addEventListener('change', (e) => {
+            this.handleEditImageUpload(e.target.files[0], 'main');
+        });
+    }
+    
+    // Configurer l'upload pour la miniature
+    const thumbnailInput = document.getElementById('edit_thumbnail_file');
+    if (thumbnailInput) {
+        thumbnailInput.addEventListener('change', (e) => {
+            this.handleEditImageUpload(e.target.files[0], 'thumbnail');
+        });
+    }
+}
+
+async handleEditImageUpload(file, type) {
+    if (!file) return;
+    
+    console.log(`📤 Upload ${type}:`, file.name);
+    
+    // Afficher une prévisualisation immédiate
+    this.showEditImagePreview(file, type);
+    
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch(this.API_BASE_URL + 'upload.php', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Remplir automatiquement le champ URL
+            if (type === 'main') {
+                document.getElementById('edit_main_image_url').value = data.data.main_image_url;
+                this.updateEditImagePreview('main');
+            } else if (type === 'thumbnail') {
+                document.getElementById('edit_thumbnail_url').value = data.data.thumbnail_url || data.data.main_image_url;
+                this.updateEditImagePreview('thumbnail');
+            }
+            
+            this.showAlert('✅ Image uploadée avec succès !', 'success');
+        } else {
+            this.showAlert('❌ Erreur upload: ' + (data.error || 'Erreur inconnue'), 'error');
+            this.updateEditImagePreview(type); // Réafficher le placeholder
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        this.showAlert('❌ Erreur de connexion au serveur', 'error');
+        this.updateEditImagePreview(type); // Réafficher le placeholder
+    }
+}
+
+showEditImagePreview(file, type) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const previewId = type === 'main' ? 'edit_main_image_preview' : 'edit_thumbnail_preview';
+        const preview = document.getElementById(previewId);
+        
+        preview.innerHTML = `
+            <div class="position-relative" style="width: 100%; height: 150px; border-radius: 8px; overflow: hidden;">
+                <img src="${e.target.result}" alt="Aperçu" 
+                     style="width: 100%; height: 100%; object-fit: cover;">
+                <div class="position-absolute top-2 right-2 badge bg-info">
+                    <i class="fas fa-spinner fa-spin me-1"></i>Upload...
+                </div>
+                <div class="position-absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2 text-center">
+                    <small><i class="fas fa-clock me-1"></i>${file.name} (${Math.round(file.size / 1024)} KB)</small>
+                </div>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+}
+
+clearEditImage(type) {
+    console.log(`🗑️ Effacer image ${type}`);
+    
+    if (type === 'main') {
+        document.getElementById('edit_main_image_url').value = '';
+        document.getElementById('edit_main_image_file').value = '';
+        this.updateEditImagePreview('main');
+    } else if (type === 'thumbnail') {
+        document.getElementById('edit_thumbnail_url').value = '';
+        document.getElementById('edit_thumbnail_file').value = '';
+        this.updateEditImagePreview('thumbnail');
+    }
+}
+
+// ET REMPLACEZ updateEditImagePreview par cette version corrigée :
+updateEditImagePreview(type) {
+    const inputId = type === 'main' ? 'edit_main_image_url' : 'edit_thumbnail_url';
+    const previewId = type === 'main' ? 'edit_main_image_preview' : 'edit_thumbnail_preview';
+    const fileInputId = type === 'main' ? 'edit_main_image_file' : 'edit_thumbnail_file';
+    
+    const url = document.getElementById(inputId)?.value || '';
+    const preview = document.getElementById(previewId);
+    
+    if (!preview) {
+        console.error(`❌ Preview ${previewId} non trouvé`);
+        return;
+    }
+    
+    // Vider complètement le preview
+    preview.innerHTML = '';
+    
+    if (url && url.trim() !== '') {
+        // Créer un conteneur
+        const container = document.createElement('div');
+        container.className = 'position-relative';
+        container.style.cssText = 'width: 100%; height: 150px; border-radius: 8px; overflow: hidden;';
+        
+        // Créer l'image
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = type === 'main' ? 'Image principale' : 'Miniature';
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+        
+        // Gestion d'erreur discrète
+        img.onerror = function() {
+            // SVG de remplacement
+            this.src = `data:image/svg+xml,%3Csvg width='200' height='150' viewBox='0 0 200 150' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='200' height='150' rx='10' fill='%231a1a1a'/%3E%3Cpath d='M70 50H50V70H70V50Z' stroke='%23475569' stroke-width='2'/%3E%3Cpath d='M120 50L100 70L140 60L130 65L125 62.5L120 65Z' stroke='%2337A1FF' stroke-width='2'/%3E%3Ccircle cx='60' cy='60' r='5' fill='%2337A1FF'/%3E%3Cpath d='M80 90L100 110M120 90L140 110' stroke='%23475569' stroke-width='2'/%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%2394A3B8' font-size='12'%3EImage non disponible%3C/text%3E%3C/svg%3E`;
+            this.style.filter = 'grayscale(0.8) opacity(0.7)';
+            
+            // Ajouter un badge d'avertissement
+            const warningBadge = document.createElement('div');
+            warningBadge.className = 'position-absolute top-2 right-2 badge bg-warning text-dark';
+            warningBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>404';
+            warningBadge.style.fontSize = '0.7rem';
+            warningBadge.style.zIndex = '10';
+            
+            container.appendChild(warningBadge);
+        };
+        
+        // Gestion de succès
+        img.onload = function() {
+            // Ajouter un badge de succès
+            const successBadge = document.createElement('div');
+            successBadge.className = 'position-absolute top-2 right-2 badge bg-success';
+            successBadge.innerHTML = '<i class="fas fa-check me-1"></i>OK';
+            successBadge.style.fontSize = '0.7rem';
+            successBadge.style.zIndex = '10';
+            
+            container.appendChild(successBadge);
+        };
+        
+        container.appendChild(img);
+        
+        // Ajouter un overlay avec l'info URL
+        const overlay = document.createElement('div');
+        overlay.className = 'position-absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2';
+        overlay.style.fontSize = '0.75rem';
+        
+        const fileName = url.split('/').pop();
+        overlay.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-truncate" style="max-width: 70%;">
+                    <i class="fas fa-link me-1"></i>
+                    ${fileName || 'Image'}
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-light me-1" onclick="window.open('${url}', '_blank')" title="Voir l'image">
+                        <i class="fas fa-external-link-alt"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="clearEditImage('${type}')" title="Effacer">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(overlay);
+        preview.appendChild(container);
+        
+    } else {
+        // Afficher un placeholder invitant à uploader
+        preview.innerHTML = `
+            <div class="text-center py-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-blue-500 transition-colors cursor-pointer"
+                 onclick="document.getElementById('${fileInputId}').click()"
+                 style="height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <i class="fas fa-cloud-upload-alt fa-3x text-gray-600 mb-3"></i>
+                <p class="text-gray-400 mb-1">Aucune image</p>
+                <small class="text-gray-500">
+                    <i class="fas fa-mouse-pointer me-1"></i>Cliquez pour uploader
+                </small>
+            </div>
+        `;
+    }
+}
+
 }
 
 // ==============================================
@@ -643,6 +1156,76 @@ window.resetForm = function() {
         fallbackResetForm();
     }
 };
+
+// Fonctions globales pour les boutons
+window.addEditTechnology = function() {
+    if (window.adminManager) {
+        window.adminManager.addEditTechnologyField();
+    }
+};
+
+window.addEditFeature = function() {
+    if (window.adminManager) {
+        window.adminManager.addEditFeatureField();
+    }
+};
+
+
+// Fonctions globales pour le modal d'édition
+window.clearEditImage = function(type) {
+    if (window.adminManager && window.adminManager.clearEditImage) {
+        window.adminManager.clearEditImage(type);
+    }
+};
+
+window.addEditTechnology = function() {
+    if (window.adminManager && window.adminManager.addEditTechnologyField) {
+        window.adminManager.addEditTechnologyField();
+    }
+};
+
+window.addEditFeature = function() {
+    if (window.adminManager && window.adminManager.addEditFeatureField) {
+        window.adminManager.addEditFeatureField();
+    }
+};
+
+window.clearAllTechnologies = function() {
+    const container = document.getElementById('edit_technologies_container');
+    if (container) {
+        if (confirm('Voulez-vous vraiment effacer toutes les technologies ?')) {
+            container.innerHTML = '';
+            window.adminManager?.addEditTechnologyField();
+        }
+    }
+};
+
+window.clearAllFeatures = function() {
+    const container = document.getElementById('edit_features_container');
+    if (container) {
+        if (confirm('Voulez-vous vraiment effacer toutes les fonctionnalités ?')) {
+            container.innerHTML = '';
+            window.adminManager?.addEditFeatureField();
+        }
+    }
+};
+
+// Gestion du read-only des URLs
+document.addEventListener('DOMContentLoaded', function() {
+    const urlInputs = ['edit_main_image_url', 'edit_thumbnail_url'];
+    
+    urlInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            // Réactiver le read-only si on sort du champ
+            input.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.setAttribute('readonly', true);
+                }
+            });
+        }
+    });
+});
 
 // Fonctions de fallback
 function fallbackAddTechnology() {

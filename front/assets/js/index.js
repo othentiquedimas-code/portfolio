@@ -141,7 +141,7 @@ class PortfolioManager {
 
             console.log('🔗 Loading projects from API...');
             
-            const response = await fetch(this.constructor.API_BASE_URL + 'projetApi.php?action=public_list');
+            const response = await fetch(this.constructor.API_BASE_URL + 'projetApi.php?action=list');
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -272,13 +272,7 @@ class PortfolioManager {
                                 ${project.features.map(feature => `<li>${feature}</li>`).join('')}
                             </ul>` : ''}
                             
-                            ${project.client_name ? `
-                            <h6>Client</h6>
-                            <p>${project.client_name}</p>` : ''}
                             
-                            ${project.project_date ? `
-                            <h6>Date du projet</h6>
-                            <p>${new Date(project.project_date).toLocaleDateString('fr-FR')}</p>` : ''}
                         </div>
                         <div class="modal-footer">
                             <a href="#" class="btn-ice-outline" data-bs-dismiss="modal">Fermer</a>

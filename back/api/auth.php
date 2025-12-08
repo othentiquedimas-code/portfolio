@@ -30,10 +30,7 @@ try {
         case 'login':
             handleLogin();
             break;
-            
-        // case 'register':
-        //     handleRegister();
-        //     break;
+        
             
         case 'current_user':
             handleCurrentUser();
@@ -132,109 +129,10 @@ function handleLogin() {
     }
 }
 
-// function handleRegister() {
-//     // Récupérer les données JSON
-//     $input = json_decode(file_get_contents("php://input"), true);
-    
-//     if (!$input) {
-//         http_response_code(400);
-//         echo json_encode([
-//             'success' => false,
-//             'error' => 'Données JSON invalides'
-//         ]);
-//         return;
-//     }
-    
-//     // Validation adaptée
-//     $requiredFields = ['username', 'email', 'password'];
-//     foreach ($requiredFields as $field) {
-//         if (empty($input[$field])) {
-//             http_response_code(400);
-//             echo json_encode([
-//                 'success' => false,
-//                 'error' => 'Le champ "' . $field . '" est requis'
-//             ]);
-//             return;
-//         }
-//     }
-    
-//     // Validation de l'email
-//     if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
-//         http_response_code(400);
-//         echo json_encode([
-//             'success' => false,
-//             'error' => 'Format d\'email invalide'
-//         ]);
-//         return;
-//     }
-    
-//     // Validation du mot de passe
-//     if (strlen($input['password']) < 8) {
-//         http_response_code(400);
-//         echo json_encode([
-//             'success' => false,
-//             'error' => 'Le mot de passe doit contenir au moins 8 caractères'
-//         ]);
-//         return;
-//     }
 
-//     $user = new User();
-    
-//     try {
-//         // Appeler la nouvelle méthode avec les bons paramètres
-//         $userId = $user->create(
-//             $input['username'],
-//             $input['email'],
-//             $input['password']
-//         );
-        
-//         if ($userId) {
-//             // Connexion automatique
-//             if ($user->login($input['email'], $input['password'])) {
-//                 $_SESSION['user_id'] = $user->id;
-//                 $_SESSION['user_username'] = $user->username;
-//                 $_SESSION['user_email'] = $user->email;
-//                 $_SESSION['user_role'] = $user->role;
-//                 $_SESSION['last_activity'] = time();
-                
-//                 echo json_encode([
-//                     'success' => true,
-//                     'message' => 'Compte créé avec succès',
-//                     'user' => [
-//                         'id' => $user->id,
-//                         'username' => $user->username,
-//                         'email' => $user->email,
-//                         'role' => $user->role
-//                     ]
-//                 ]);
-//             } else {
-//                 // Si la connexion automatique échoue
-//                 echo json_encode([
-//                     'success' => true,
-//                     'message' => 'Compte créé avec succès. Vous pouvez maintenant vous connecter.'
-//                 ]);
-//             }
-//         } else {
-//             http_response_code(500);
-//             echo json_encode([
-//                 'success' => false,
-//                 'error' => 'Erreur lors de la création du compte'
-//             ]);
-//         }
-//     } catch (Exception $e) {
-//         http_response_code(400);
-//         echo json_encode([
-//             'success' => false,
-//             'error' => $e->getMessage()
-//         ]);
-//     }
-// }
 
 function handleCurrentUser() {
-    // ✅ DÉMARRER LA SESSION POUR ACCÉDER AUX VARIABLES
-    session_start();
-    
-    // VÉRIFIER SI L'UTILISATEUR EST CONNECTÉ
+    // ✅ VÉRIFIER SI L'UTILISATEUR EST CONNECTÉ
     if (!isset($_SESSION['user_id'])) {
         http_response_code(401);
         echo json_encode([

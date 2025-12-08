@@ -239,6 +239,27 @@ class Project
 
         return $projects;
     }
+    
+    public function getById($id)
+    {
+        $query = "SELECT * FROM " . $this->table_name . " 
+                WHERE id = :id 
+                LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        if ($stmt->rowCount() == 1) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Décoder les JSON
+            $row['technologies'] = json_decode($row['technologies'], true) ?? [];
+            $row['features'] = json_decode($row['features'], true) ?? [];
+            return $row;
+        }
+
+        return null;
+    }
 
     // Générer un slug à partir du titre
     private function generateSlug($title)

@@ -1,18 +1,15 @@
 <?php
-// Version ultra-simplifiée sans dépendances
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Credentials: true");
 
-// Inclure la configuration et le modèle
-require_once '../config/database.php';
-require_once '../model/projet.php';
+
+header("Access-Control-Allow-Origin: *");
 
 session_start();
 if (!isset($_SESSION['user_id'])) {

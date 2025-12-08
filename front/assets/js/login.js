@@ -1,5 +1,4 @@
 class AuthManager {
-  // CORRECTION ICI : changer '/todolist/' par '/portfoliodim/'
   static API_BASE_URL = window.location.origin + '/portfoliodim/back/api/';
 
   constructor() {
@@ -144,16 +143,16 @@ class AuthManager {
   }
 
   // Gestion de la connexion réussie
-
-handleLoginSuccess(userData) {
+  handleLoginSuccess(userData) {
     this.showToast("Connexion réussie!", `Bienvenue ${userData.username} !`, "success");
     this.resetButton(this.loginBtn, '<i class="fas fa-sign-in-alt me-2"></i>Se connecter');
 
-    // Redirection vers l'interface d'administration
+    // CORRECTION ICI : Redirection vers la bonne URL
     setTimeout(() => {
-        window.location.href = "/portfoliodim/front/assets/admin.html";
+      window.location.href = "/portfoliodim/front/assets/admin.html"; // Ajusté pour portfoliodim
     }, 1500);
-}
+  }
+
   // Méthodes utilitaires
   showLoading(button, text) {
     button.innerHTML = `<div class="spinner-border spinner-border-sm me-2"></div>${text}`;

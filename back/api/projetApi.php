@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 header("Content-Type: application/json");
@@ -8,6 +8,15 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Access-Control-Allow-Credentials: true");
+
+
+
+// Vérifiez que le fichier existe
+if (!file_exists(__FILE__)) {
+    echo json_encode(['error' => 'Fichier PHP non trouvé']);
+    exit;
+}
+
 
 // Inclure la configuration et le modèle
 require_once '../config/database.php';
@@ -28,37 +37,32 @@ if (session_status() === PHP_SESSION_NONE) {
 $action = $_GET['action'] ?? '';
 
 try {
-    switch ($action) {
-        case 'create':
-            handleProjectCreate();
-            break;
-            
-        case 'list':
-            handleProjectList();
-            break;
-            
-        case 'get':
-            handleProjectGet();
-            break;
-            
-        case 'update':
-            handleProjectUpdate();
-            break;
-            
-        case 'delete':
-            handleProjectDelete();
-            break;
+   switch ($action) {
+    case 'create':
+        handleProjectCreate();
+        break;
+        
+    case 'list':
+        handlePublicProjectList();
+        break;
 
-        case 'public_list':
-            handlePublicProjectList();
-            break;
-            
-        default:
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Action non spécifiée'
-            ]);
+        case 'admin_list':
+        handleAdminProjectList();
+        break;
+        
+    case 'get':           // ← ANCIEN (pour public par slug)
+        handleProjectGet();
+        break;
+        
+    case 'admin_get':     // ← NOUVEAU (pour admin par ID)
+        handleAdminProjectGet();
+        break;
+        
+    case 'update':
+        handleProjectUpdate();
+        break;
+        
+
     }
 } catch (Exception $e) {
     http_response_code(500);
@@ -185,6 +189,27 @@ function handlePublicProjectList()
     }
 }
 
+function handleAdminProjectList()
+{
+    $project = new Project();
+    
+    try {
+        $projects = $project->getAll();
+        
+        echo json_encode([
+            'success' => true,
+            'projects' => $projects
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Erreur lors du chargement des projets: ' . $e->getMessage()
+        ]);
+    }
+}
+
+
 function handleProjectGet()
 {
     // Pour les projets publics, pas besoin d'authentification
@@ -203,6 +228,56 @@ function handleProjectGet()
     
     try {
         $projectData = $project->getBySlug($slug);
+        
+        if ($projectData) {
+            echo json_encode([
+                'success' => true,
+                'project' => $projectData
+            ]);
+        } else {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Projet non trouvé'
+            ]);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Erreur serveur: ' . $e->getMessage()
+        ]);
+    }
+}
+
+function handleAdminProjectGet()
+{
+    // Vérifier l'authentification ADMIN
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Non autorisé. Veuillez vous connecter.'
+        ]);
+        return;
+    }
+
+    // Récupérer l'ID depuis GET
+    $id = $_GET['id'] ?? null;
+    
+    if (!$id || !is_numeric($id)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => 'ID du projet manquant ou invalide'
+        ]);
+        return;
+    }
+
+    $project = new Project();
+    
+    try {
+        $projectData = $project->getById($id);
         
         if ($projectData) {
             echo json_encode([

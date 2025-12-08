@@ -20,56 +20,7 @@ class User
         $this->conn = $database->getConnection();
     }
 
-    /**
-     * Méthode pour créer un nouvel utilisateur
-     */
-    // public function create($username, $email, $password)
-    // {
-    //     try {
-    //         // Vérifier si l'email existe déjà
-    //         if ($this->emailExists($email)) {
-    //             throw new Exception("Cet email est déjà utilisé.");
-    //         }
-
-    //         // Vérifier si le username existe déjà
-    //         if ($this->usernameExists($username)) {
-    //             throw new Exception("Ce nom d'utilisateur est déjà pris.");
-    //         }
-
-    //         // Hasher le mot de passe
-    //         $password_hash = password_hash($password, PASSWORD_DEFAULT);
-
-    //         // Requête d'insertion
-    //         $query = "INSERT INTO " . $this->table_name . " 
-    //                  SET username = :username, 
-    //                      email = :email, 
-    //                      password_hash = :password_hash,
-    //                      role = 'admin'";
-
-    //         $stmt = $this->conn->prepare($query);
-
-    //         // Nettoyer et binder les données
-    //         $cleanUsername = htmlspecialchars(strip_tags($username));
-    //         $cleanEmail = htmlspecialchars(strip_tags($email));
-
-    //         $stmt->bindParam(":username", $cleanUsername);
-    //         $stmt->bindParam(":email", $cleanEmail);
-    //         $stmt->bindParam(":password_hash", $password_hash);
-
-    //         if ($stmt->execute()) {
-    //             $this->id = $this->conn->lastInsertId();
-    //             $this->username = $username;
-    //             $this->email = $email;
-    //             $this->role = 'admin';
-                
-    //             return $this->id;
-    //         }
-
-    //         return false;
-    //     } catch (PDOException $e) {
-    //         throw new Exception("Erreur base de données: " . $e->getMessage());
-    //     }
-    // }
+    
 
     /**
      * Méthode de connexion
