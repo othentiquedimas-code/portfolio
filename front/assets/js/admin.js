@@ -225,56 +225,94 @@ class AdminManager {
         }
     }
 
-    afficherProjets(projets) {
-        let html = "";
-        
-        if (!projets || projets.length === 0) {
-            html = `
-                <tr>
-                    <td colspan="5" class="text-center text-muted">
-                        📭 Aucun projet pour le moment
+ afficherProjets(projets) {
+    let html = "";
+    
+    if (!projets || projets.length === 0) {
+        html = `
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    📭 Aucun projet pour le moment
+                </td>
+            </tr>
+        `;
+    } else {
+        projets.forEach(projet => {
+            const date = new Date(projet.created_at).toLocaleDateString("fr-FR");
+            
+            // Déterminer la couleur du badge de statut
+            let statusClass = 'bg-secondary';
+            let statusText = 'Inconnu';
+            
+            switch(projet.status) {
+                case 'published':
+                    statusClass = 'bg-success';
+                    statusText = 'Publié';
+                    break;
+                case 'draft':
+                    statusClass = 'bg-warning text-dark';
+                    statusText = 'Brouillon';
+                    break;
+                case 'archived':
+                    statusClass = 'bg-dark';
+                    statusText = 'Archivé';
+                    break;
+                case 'deleted':
+                    statusClass = 'bg-danger';
+                    statusText = 'Supprimé';
+                    break;
+            }
+            
+            // Si le projet est supprimé, l'afficher en grisé
+            const rowClass = projet.status === 'deleted' ? 'text-muted bg-light' : '';
+            
+            html += `
+                <tr class="${rowClass}">
+                    <td>
+                        ${projet.title}
+                        ${projet.status === 'deleted' ? '<i class="fas fa-trash ms-2 text-danger"></i>' : ''}
+                    </td>
+                    <td><span class="badge bg-primary">${projet.category}</span></td>
+                    <td>
+                        <span class="badge ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td>${date}</td>
+                    <td>
+                        ${projet.status !== 'deleted' ? `
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="window.adminManager && window.adminManager.editProject(${projet.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ` : ''}
+                        
+                        ${projet.status === 'deleted' ? `
+                        <button class="btn btn-sm btn-outline-secondary" 
+                                onclick="window.adminManager && window.adminManager.restoreProject(${projet.id})"
+                                title="Restaurer">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        
+                        <button class="btn btn-sm btn-outline-danger ms-2" 
+                                onclick="window.adminManager && window.adminManager.deletePermanently(${projet.id})"
+                                title="Supprimer définitivement">
+                            <i class="fas fa-skull-crossbones"></i>
+                        </button>
+                        ` : `
+                        <button class="btn btn-sm btn-outline-danger ms-2" 
+                                onclick="window.adminManager && window.adminManager.deleteProject(${projet.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        `}
                     </td>
                 </tr>
             `;
-        } else {
-            projets.forEach(projet => {
-                const date = new Date(projet.created_at).toLocaleDateString("fr-FR");
-                
-                // Déterminer la couleur du badge de statut
-                let statusClass = 'bg-secondary';
-                if (projet.status === 'published') statusClass = 'bg-success';
-                if (projet.status === 'draft') statusClass = 'bg-warning';
-                if (projet.status === 'archived') statusClass = 'bg-dark';
-                
-                html += `
-                    <tr>
-                        <td>${projet.title}</td>
-                        <td><span class="badge bg-primary">${projet.category}</span></td>
-                        <td>
-                            <span class="badge ${statusClass}">
-                                ${projet.status === 'published' ? 'Publié' : 
-                                projet.status === 'draft' ? 'Brouillon' : 
-                                projet.status === 'archived' ? 'Archivé' : projet.status}
-                            </span>
-                        </td>
-                        <td>${date}</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary" 
-                                    onclick="window.adminManager && window.adminManager.editProject(${projet.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-
-                            <button class="btn btn-sm btn-outline-danger ms-2" onclick="adminManager.deleteProject(${projet.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-        
-        this.projectsTableBody.innerHTML = html;
+        });
     }
+    
+    this.projectsTableBody.innerHTML = html;
+}
 
     configurerBoutons() {
         if (this.projectForm) {
@@ -981,10 +1019,10 @@ updateEditImagePreview(type) {
     const url = document.getElementById(inputId)?.value || '';
     const preview = document.getElementById(previewId);
     
-    if (!preview) {
-        console.error(`❌ Preview ${previewId} non trouvé`);
-        return;
-    }
+        if (!preview) {
+            console.error(`❌ Preview ${previewId} non trouvé`);
+            return;
+        }
     
     // Vider complètement le preview
     preview.innerHTML = '';
@@ -1002,33 +1040,34 @@ updateEditImagePreview(type) {
         img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
         
         // Gestion d'erreur discrète
+
         img.onerror = function() {
-            // SVG de remplacement
-            this.src = `data:image/svg+xml,%3Csvg width='200' height='150' viewBox='0 0 200 150' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='200' height='150' rx='10' fill='%231a1a1a'/%3E%3Cpath d='M70 50H50V70H70V50Z' stroke='%23475569' stroke-width='2'/%3E%3Cpath d='M120 50L100 70L140 60L130 65L125 62.5L120 65Z' stroke='%2337A1FF' stroke-width='2'/%3E%3Ccircle cx='60' cy='60' r='5' fill='%2337A1FF'/%3E%3Cpath d='M80 90L100 110M120 90L140 110' stroke='%23475569' stroke-width='2'/%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%2394A3B8' font-size='12'%3EImage non disponible%3C/text%3E%3C/svg%3E`;
-            this.style.filter = 'grayscale(0.8) opacity(0.7)';
-            
-            // Ajouter un badge d'avertissement
-            const warningBadge = document.createElement('div');
-            warningBadge.className = 'position-absolute top-2 right-2 badge bg-warning text-dark';
-            warningBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>404';
-            warningBadge.style.fontSize = '0.7rem';
-            warningBadge.style.zIndex = '10';
-            
-            container.appendChild(warningBadge);
-        };
-        
-        // Gestion de succès
-        img.onload = function() {
-            // Ajouter un badge de succès
-            const successBadge = document.createElement('div');
-            successBadge.className = 'position-absolute top-2 right-2 badge bg-success';
-            successBadge.innerHTML = '<i class="fas fa-check me-1"></i>OK';
-            successBadge.style.fontSize = '0.7rem';
-            successBadge.style.zIndex = '10';
-            
-            container.appendChild(successBadge);
-        };
-        
+                    // SVG de remplacement
+                    this.src = `data:image/svg+xml,%3Csvg width='200' height='150' viewBox='0 0 200 150' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='200' height='150' rx='10' fill='%231a1a1a'/%3E%3Cpath d='M70 50H50V70H70V50Z' stroke='%23475569' stroke-width='2'/%3E%3Cpath d='M120 50L100 70L140 60L130 65L125 62.5L120 65Z' stroke='%2337A1FF' stroke-width='2'/%3E%3Ccircle cx='60' cy='60' r='5' fill='%2337A1FF'/%3E%3Cpath d='M80 90L100 110M120 90L140 110' stroke='%23475569' stroke-width='2'/%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%2394A3B8' font-size='12'%3EImage non disponible%3C/text%3E%3C/svg%3E`;
+                    this.style.filter = 'grayscale(0.8) opacity(0.7)';
+                    
+                    // Ajouter un badge d'avertissement
+                    const warningBadge = document.createElement('div');
+                    warningBadge.className = 'position-absolute top-2 right-2 badge bg-warning text-dark';
+                    warningBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>404';
+                    warningBadge.style.fontSize = '0.7rem';
+                    warningBadge.style.zIndex = '10';
+                    
+                    container.appendChild(warningBadge);
+                };
+                
+                // Gestion de succès
+                img.onload = function() {
+                    // Ajouter un badge de succès
+                    const successBadge = document.createElement('div');
+                    successBadge.className = 'position-absolute top-2 right-2 badge bg-success';
+                    successBadge.innerHTML = '<i class="fas fa-check me-1"></i>OK';
+                    successBadge.style.fontSize = '0.7rem';
+                    successBadge.style.zIndex = '10';
+                    
+                    container.appendChild(successBadge);
+                };
+                
         container.appendChild(img);
         
         // Ajouter un overlay avec l'info URL
@@ -1070,6 +1109,123 @@ updateEditImagePreview(type) {
                 </small>
             </div>
         `;
+    }
+}
+
+async deleteProject(projectId) {
+    console.log("🗑️ Tentative de suppression du projet ID:", projectId);
+    
+    // Demander confirmation
+    if (!confirm("⚠️ Voulez-vous vraiment supprimer ce projet ?\n\nCette action le masquera du portfolio mais le conservera en base de données (soft delete).")) {
+        console.log("❌ Suppression annulée par l'utilisateur");
+        return;
+    }
+    
+    try {
+        // Bouton de suppression - afficher état "en cours"
+        const deleteBtn = event.target.closest('button');
+        const originalHtml = deleteBtn?.innerHTML || '';
+        if (deleteBtn) {
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            deleteBtn.disabled = true;
+        }
+        
+        // Appeler l'API de suppression
+        const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=delete&id=${projectId}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: projectId })
+        });
+        
+        const data = await response.json();
+        
+        if (deleteBtn) {
+            deleteBtn.innerHTML = originalHtml;
+            deleteBtn.disabled = false;
+        }
+        
+        if (data.success) {
+            console.log("✅ Projet supprimé avec succès");
+            this.showAlert('✅ Projet marqué comme supprimé avec succès', 'success');
+            
+            // Rafraîchir la liste des projets après 1 seconde
+            setTimeout(() => {
+                this.chargerProjets();
+            }, 1000);
+            
+        } else {
+            console.error("❌ Erreur lors de la suppression:", data.error);
+            this.showAlert('❌ Erreur: ' + (data.error || 'Impossible de supprimer le projet'), 'error');
+        }
+        
+    } catch (error) {
+        console.error("💥 Erreur réseau:", error);
+        
+        // Restaurer le bouton
+        const deleteBtn = event.target.closest('button');
+        if (deleteBtn) {
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.disabled = false;
+        }
+        
+        this.showAlert('❌ Erreur de connexion au serveur', 'error');
+    }
+}
+
+async restoreProject(projectId) {
+    if (!confirm("🔄 Voulez-vous restaurer ce projet ?")) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=restore&id=${projectId}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: projectId, status: 'draft' })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            this.showAlert('✅ Projet restauré (mis en brouillon)', 'success');
+            setTimeout(() => this.chargerProjets(), 1000);
+        } else {
+            this.showAlert('❌ ' + (data.error || 'Erreur de restauration'), 'error');
+        }
+    } catch (error) {
+        console.error("Erreur:", error);
+        this.showAlert('❌ Erreur serveur', 'error');
+    }
+}
+
+async deletePermanently(projectId) {
+    if (!confirm("☠️ ⚠️ ATTENTION : Suppression DÉFINITIVE !\n\nCe projet sera effacé de la base de données et ne pourra PAS être récupéré.\n\nConfirmez-vous cette action ?")) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=delete_permanent&id=${projectId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            this.showAlert('✅ Projet supprimé définitivement', 'success');
+            setTimeout(() => this.chargerProjets(), 1000);
+        } else {
+            this.showAlert('❌ ' + (data.error || 'Erreur de suppression'), 'error');
+        }
+    } catch (error) {
+        console.error("Erreur:", error);
+        this.showAlert('❌ Erreur serveur', 'error');
     }
 }
 
