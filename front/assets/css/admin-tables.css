@@ -1,0 +1,785 @@
+/* ============================================
+   ADMIN TABLES CSS - Tables, pagination, filtres
+   Compatible avec votre thème glacial existant
+============================================= */
+
+/* ===== CONTENEURS DE TABLEAUX ===== */
+.glacial-table-container {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(125, 211, 252, 0.1);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 30px;
+    box-shadow: 
+        0 25px 50px -12px rgba(15, 23, 42, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.glacial-table-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(125, 211, 252, 0.5) 50%, 
+        transparent 100%);
+}
+
+/* ===== EN-TÊTE DE TABLEAU ===== */
+.glacial-table-header {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.2);
+}
+
+.glacial-table-header .row {
+    align-items: flex-end;
+}
+
+/* ===== TABLEAU GLACIAL ===== */
+.table-glacial {
+    --bs-table-bg: transparent;
+    --bs-table-border-color: rgba(125, 211, 252, 0.1);
+    color: var(--text-primary);
+    margin-bottom: 0;
+}
+
+.table-glacial thead {
+    border-bottom: 2px solid rgba(125, 211, 252, 0.3);
+}
+
+.glacial-thead th {
+    color: var(--primary-blue-light);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 18px 12px;
+    background: rgba(14, 165, 233, 0.05);
+    border: none;
+    white-space: nowrap;
+}
+
+.glacial-thead th.sortable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.glacial-thead th.sortable:hover {
+    background: rgba(14, 165, 233, 0.1);
+}
+
+.glacial-thead th.sortable .sort-icon {
+    margin-left: 8px;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.glacial-thead th.sortable:hover .sort-icon {
+    opacity: 1;
+}
+
+.glacial-thead th.sortable.active {
+    background: rgba(14, 165, 233, 0.15);
+}
+
+.glacial-thead th.sortable.active .sort-icon {
+    opacity: 1;
+    color: var(--primary-blue);
+}
+
+/* ===== LIGNES DU TABLEAU ===== */
+.glacial-table-row {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.05);
+    background: transparent;
+}
+
+.glacial-table-row:hover {
+    background: linear-gradient(90deg, 
+        rgba(14, 165, 233, 0.05) 0%, 
+        rgba(125, 211, 252, 0.02) 100%);
+    transform: translateX(4px);
+}
+
+.glacial-table-row.selected {
+    background: linear-gradient(90deg, 
+        rgba(14, 165, 233, 0.1) 0%, 
+        rgba(125, 211, 252, 0.05) 100%);
+    border-left: 3px solid var(--primary-blue);
+}
+
+.glacial-table-row.deleted {
+    opacity: 0.6;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.glacial-table-row.deleted:hover {
+    background: linear-gradient(90deg, 
+        rgba(239, 68, 68, 0.1) 0%, 
+        rgba(239, 68, 68, 0.05) 100%);
+}
+
+.glacial-table-row td {
+    padding: 20px 12px;
+    vertical-align: middle;
+    border: none;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.05);
+}
+
+.glacial-table-row:last-child td {
+    border-bottom: none;
+}
+
+/* ===== CELLULES SPÉCIALES ===== */
+.table-cell-image {
+    width: 60px;
+}
+
+.table-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+    transition: all 0.3s ease;
+}
+
+.table-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
+}
+
+.table-image-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-blue-light);
+    border: 1px dashed rgba(125, 211, 252, 0.3);
+}
+
+.table-cell-array {
+    max-width: 200px;
+}
+
+.table-cell-actions {
+    width: 150px;
+    text-align: center;
+}
+
+/* ===== BOUTONS D'ACTION DANS LE TABLEAU ===== */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.action-buttons .btn-view {
+    background: rgba(14, 165, 233, 0.1);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    color: var(--primary-blue);
+}
+
+.action-buttons .btn-view:hover {
+    background: rgba(14, 165, 233, 0.2);
+    border-color: var(--primary-blue);
+}
+
+.action-buttons .btn-edit {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.action-buttons .btn-edit:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+}
+
+.action-buttons .btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.action-buttons .btn-delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+}
+
+.action-buttons .btn-restore {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.action-buttons .btn-restore:hover {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+}
+
+/* ===== PAGINATION GLACIALE ===== */
+.glacial-pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 0 0;
+    margin-top: 25px;
+    border-top: 1px solid rgba(125, 211, 252, 0.1);
+}
+
+.pagination-info {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-info .info-icon {
+    color: var(--glacier-blue);
+}
+
+.glacial-pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-btn {
+    background: rgba(14, 165, 233, 0.1);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    color: var(--primary-blue-light);
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 0;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: rgba(14, 165, 233, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.pagination-btn.prev {
+    margin-right: 4px;
+}
+
+.pagination-btn.next {
+    margin-left: 4px;
+}
+
+.page-number {
+    background: transparent;
+    border: 1px solid rgba(125, 211, 252, 0.1);
+    color: var(--text-secondary);
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 0;
+}
+
+.page-number:hover:not(.active) {
+    background: rgba(14, 165, 233, 0.1);
+    color: var(--primary-blue-light);
+    border-color: rgba(14, 165, 233, 0.2);
+}
+
+.page-number.active {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-cyan) 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    font-weight: 600;
+}
+
+.page-number.active:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+}
+
+.page-ellipsis {
+    color: var(--text-muted);
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+/* ===== FILTRES AVANCÉS ===== */
+.filter-section {
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(125, 211, 252, 0.1);
+}
+
+.filter-section .filter-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-section .filter-title .icon {
+    color: var(--glacier-blue);
+}
+
+.filter-group {
+    margin-bottom: 15px;
+}
+
+.filter-group:last-child {
+    margin-bottom: 0;
+}
+
+.filter-group label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    display: block;
+    font-weight: 500;
+}
+
+.filter-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.filter-dropdown::after {
+    content: '';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--glacier-blue);
+    pointer-events: none;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    border-radius: 12px;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    appearance: none;
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.filter-select option {
+    background: var(--primary-dark);
+    color: var(--text-primary);
+}
+
+/* ===== FILTRES PAR DATE ===== */
+.date-range-filter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-range-filter .date-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    border-radius: 12px;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.date-range-filter .date-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.date-range-filter .date-separator {
+    color: var(--text-muted);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+/* ===== CHECKBOXES DE FILTRE ===== */
+.filter-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.filter-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.filter-checkbox .checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(125, 211, 252, 0.3);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.filter-checkbox .checkbox::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-cyan) 100%);
+    border-radius: 2px;
+    transform: scale(0);
+    transition: transform 0.3s ease;
+}
+
+.filter-checkbox input[type="checkbox"]:checked ~ .checkbox {
+    border-color: var(--primary-blue);
+}
+
+.filter-checkbox input[type="checkbox"]:checked ~ .checkbox::after {
+    transform: scale(1);
+}
+
+.filter-checkbox .label {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ===== BOUTONS DE FILTRE ===== */
+.filter-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(125, 211, 252, 0.1);
+}
+
+.filter-apply {
+    flex: 1;
+}
+
+.filter-reset {
+    width: 48px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+/* ===== SÉLECTION MULTIPLE ===== */
+.row-selection {
+    width: 50px;
+    text-align: center;
+}
+
+.selection-checkbox {
+    width: 20px;
+    height: 20px;
+    margin: 0 auto;
+}
+
+/* ===== BARRE D'OUTILS DU TABLEAU ===== */
+.table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 12px;
+    border: 1px solid rgba(125, 211, 252, 0.1);
+}
+
+.table-toolbar .left-actions,
+.table-toolbar .right-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.table-toolbar .toolbar-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.bulk-actions.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.bulk-count {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-right: 8px;
+}
+
+/* ===== ANIMATIONS DU TABLEAU ===== */
+@keyframes table-row-appear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.glacial-table-row {
+    animation: table-row-appear 0.3s ease-out;
+    animation-fill-mode: both;
+}
+
+.glacial-table-row:nth-child(1) { animation-delay: 0.05s; }
+.glacial-table-row:nth-child(2) { animation-delay: 0.1s; }
+.glacial-table-row:nth-child(3) { animation-delay: 0.15s; }
+.glacial-table-row:nth-child(4) { animation-delay: 0.2s; }
+.glacial-table-row:nth-child(5) { animation-delay: 0.25s; }
+
+/* ===== RESPONSIVE TABLEAU ===== */
+@media (max-width: 992px) {
+    .glacial-table-container {
+        padding: 16px;
+        border-radius: 16px;
+    }
+    
+    .glacial-thead th {
+        font-size: 0.8rem;
+        padding: 14px 8px;
+    }
+    
+    .glacial-table-row td {
+        padding: 16px 8px;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .action-buttons .btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .table-toolbar {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .table-toolbar .left-actions,
+    .table-toolbar .right-actions {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .glacial-pagination-container {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .pagination-info {
+        text-align: center;
+        justify-content: center;
+    }
+    
+    .glacial-pagination {
+        justify-content: center;
+    }
+    
+    .page-number,
+    .pagination-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+    }
+    
+    /* Masquer certaines colonnes sur mobile */
+    .mobile-hidden {
+        display: none;
+    }
+    
+    .date-range-filter {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .date-range-filter .date-separator {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .glacial-table-container {
+        padding: 12px;
+        border-radius: 12px;
+    }
+    
+    .glacial-thead th,
+    .glacial-table-row td {
+        padding: 12px 6px;
+        font-size: 0.85rem;
+    }
+    
+    .filter-checkboxes {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .table-image,
+    .table-image-placeholder {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* ===== IMPRESSION ===== */
+@media print {
+    .glacial-table-container {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        background: white;
+        color: black;
+    }
+    
+    .glacial-table-row:hover {
+        transform: none;
+        background: none;
+    }
+    
+    .action-buttons {
+        display: none;
+    }
+    
+    .glacial-pagination-container {
+        display: none;
+    }
+}
+
+/* CORRECTION PRÉCISE POUR VOTRE TABLEAU - Colonnes spécifiques */
+
+
+
+/* CORRECTION DES COLONNES SPÉCIFIQUES - Version complète */
+
+.glacial-table-row td:nth-child(2) {
+    color: #7dd3fc !important; /* Bleu glacier */
+    font-weight: 600; 
+    padding: 20px 12px !important;
+    vertical-align: middle !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.05) !important;
+    background: transparent !important;
+    transition: all 0.3s ease !important;
+} 
+
+ .glacial-table-row td:nth-child(3) {
+    color: #f8fafc !important; /* Blanc glacier */
+    font-weight: 500;
+    padding: 20px 12px !important;
+    vertical-align: middle !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.05) !important;
+    background: transparent !important;
+    transition: all 0.3s ease !important;
+} 
+
+ .glacial-table-row td:nth-child(7) {
+    color: #cbd5e1 !important; /* Gris clair */
+    font-weight: 400;
+    padding: 20px 12px !important;
+    vertical-align: middle !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.05) !important;
+    background: transparent !important;
+    transition: all 0.3s ease !important;
+} 
