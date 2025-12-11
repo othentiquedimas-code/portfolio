@@ -26,11 +26,13 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"
     />
     <link rel="stylesheet" href="css/admin.css" />
+    <link rel="stylesheet" href="css/admin-components.css" />
+    <link rel="stylesheet" href="css/admin-tables.css" />
   </head>
   <body>
     <div class="container">
       <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-lg-12">
           <div class="admin-container">
             <div class="d-flex justify-content-between align-items-center mb-5">
               <h1 class="h3 mb-0">
@@ -41,327 +43,158 @@
               </button>
             </div>
 
-            <!-- Navigation Admin -->
+            <!-- Navigation Admin SIMPLIFIÉE -->
             <ul class="nav nav-tabs mb-4" id="adminTabs">
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <button
                   class="nav-link active"
                   data-bs-toggle="tab"
-                  data-bs-target="#addProject"
+                  data-bs-target="#dashboard"
                 >
-                  <i class="fas fa-plus-circle me-2"></i>Ajouter un projet
+                  <i class="fas fa-tachometer-alt me-2"></i>Tableau de bord
+                </button>
+              </li> -->
+              <li class="nav-item">
+                <button
+                  class="nav-link"
+                  data-bs-toggle="tab"
+                  data-bs-target="#manageProjects"
+                >
+                  <i class="fas fa-project-diagram me-2"></i>Projets
                 </button>
               </li>
               <li class="nav-item">
                 <button
                   class="nav-link"
                   data-bs-toggle="tab"
-                  data-bs-target="#listProjects"
+                  data-bs-target="#manageExperiences"
                 >
-                  <i class="fas fa-list me-2"></i>Gérer les projets
+                  <i class="fas fa-briefcase me-2"></i>Expériences
+                </button>
+              </li>
+              <li class="nav-item">
+                <button
+                  class="nav-link"
+                  data-bs-toggle="tab"
+                  data-bs-target="#manageContacts"
+                >
+                  <i class="fas fa-envelope me-2"></i>Messages
                 </button>
               </li>
             </ul>
 
             <!-- Contenu des onglets -->
             <div class="tab-content">
-              <!-- Formulaire d'ajout de projet -->
-              <div class="tab-pane fade show active" id="addProject">
-                <h3 class="h4 mb-4">Nouveau projet</h3>
-                <form id="projectForm">
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Titre du projet *</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="title"
-                        required
-                      />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Catégorie</label>
-                      <select class="form-select" id="category">
-                        <option value="fullstack">Full-Stack</option>
-                        <option value="frontend">Frontend</option>
-                        <option value="backend">Backend</option>
-                        <option value="mobile">Mobile</option>
-                        <option value="design">Design</option>
-                      </select>
-                    </div>
-                  </div>
+              <!-- Tableau de bord -->
 
-                  <div class="mb-3">
-                    <label class="form-label">Description courte *</label>
-                    <textarea
-                      class="form-control"
-                      id="short_description"
-                      rows="2"
-                      maxlength="500"
-                      required
-                    ></textarea>
-                    <small class="text-muted">Maximum 500 caractères</small>
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label">Description complète *</label>
-                    <textarea
-                      class="form-control"
-                      id="full_description"
-                      rows="5"
-                      required
-                    ></textarea>
-                  </div>
-
-                  <!-- Dans le formulaire d'ajout de projet -->
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Image principale</label>
-
-                      <!-- Prévisualisation -->
-                      <div class="mb-2">
-                        <img
-                          id="mainImagePreview"
-                          src=""
-                          alt="Aperçu"
-                          style="
-                            max-width: 100%;
-                            max-height: 200px;
-                            display: none;
-                          "
-                          class="rounded border"
-                        />
-                      </div>
-
-                      <!-- Bouton d'upload -->
-                      <div class="input-group">
-                        <input
-                          type="file"
-                          class="form-control"
-                          id="mainImageInput"
-                          accept="image/*"
-                        />
-                        <button
-                          class="btn btn-outline-secondary"
-                          type="button"
-                          onclick="document.getElementById('mainImageInput').click()"
-                        >
-                          <i class="fas fa-upload"></i> Uploader
-                        </button>
-                      </div>
-
-                      <!-- Champ URL (rempli automatiquement) -->
-                      <input
-                        type="hidden"
-                        class="form-control mt-2"
-                        id="main_image_url"
-                      />
-                      <small class="text-muted"
-                        >Format: JPG, PNG, GIF, WebP (max 5MB)</small
-                      >
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Miniature</label>
-
-                      <!-- Prévisualisation -->
-                      <div class="mb-2">
-                        <img
-                          id="thumbnailPreview"
-                          src=""
-                          alt="Aperçu miniature"
-                          style="
-                            max-width: 100%;
-                            max-height: 150px;
-                            display: none;
-                          "
-                          class="rounded border"
-                        />
-                      </div>
-
-                      <!-- Bouton d'upload -->
-                      <div class="input-group">
-                        <input
-                          type="file"
-                          class="form-control"
-                          id="thumbnailImageInput"
-                          accept="image/*"
-                        />
-                        <button
-                          class="btn btn-outline-secondary"
-                          type="button"
-                          onclick="document.getElementById('thumbnailImageInput').click()"
-                        >
-                          <i class="fas fa-upload"></i> Uploader
-                        </button>
-                      </div>
-
-                      <!-- Champ URL (rempli automatiquement) -->
-                      <input
-                        type="hidden"
-                        class="form-control mt-2"
-                        id="thumbnail_url"
-                      />
-                      <small class="text-muted"
-                        >Générée automatiquement si laissée vide</small
-                      >
-                    </div>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">URL GitHub</label>
-                      <input
-                        type="url"
-                        class="form-control"
-                        id="github_url"
-                        placeholder="https://github.com/..."
-                      />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">URL de démo</label>
-                      <input
-                        type="url"
-                        class="form-control"
-                        id="demo_url"
-                        placeholder="https://..."
-                      />
-                    </div>
-                  </div>
-
-                  <!-- NOUVEAUX CHAMPS AJOUTÉS -->
-                  <div class="row">
-                    <div class="col-md-4 mb-3">
-                      <label class="form-label">Nom du client</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="client_name"
-                        placeholder="Nom du client ou entreprise"
-                      />
-                    </div>
-                    <div class="col-md-4 mb-3">
-                      <label class="form-label">Date du projet</label>
-                      <input
-                        type="date"
-                        class="form-control"
-                        id="project_date"
-                      />
-                    </div>
-                    <div class="col-md-4 mb-3">
-                      <label class="form-label">Ordre d'affichage</label>
-                      <input
-                        type="number"
-                        class="form-control"
-                        id="display_order"
-                        value="0"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <div class="form-check">
-                        <input
-                          class="form-check-input"
-                          type="checkbox"
-                          id="featured"
-                        />
-                        <label class="form-check-label">
-                          <i class="fas fa-star text-warning me-1"></i>Mettre en
-                          avant
-                        </label>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Statut</label>
-                      <select class="form-select" id="status">
-                        <option value="published">Publié</option>
-                        <option value="draft">Brouillon</option>
-                        <option value="archived">Archivé</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label">Technologies utilisées</label>
-                    <div id="technologiesContainer">
-                      <div class="input-group mb-2">
-                        <input
-                          type="text"
-                          class="form-control technology-input"
-                          placeholder="Ex: React, Node.js..."
-                        />
-                        <button
-                          type="button"
-                          class="btn btn-outline-secondary"
-                          onclick="addTechnology()"
-                        >
-                          <i class="fas fa-plus"></i>
-                        </button>
-                      </div>
-                    </div>
-                    <small class="text-muted"
-                      >Appuyez sur Entrée ou cliquez sur + pour ajouter</small
-                    >
-                  </div>
-
-                  <div class="mb-4">
-                    <label class="form-label"
-                      >Fonctionnalités principales</label
-                    >
-                    <div id="featuresContainer">
-                      <div class="input-group mb-2">
-                        <input
-                          type="text"
-                          class="form-control feature-input"
-                          placeholder="Ex: Authentification, Dashboard..."
-                        />
-                        <button
-                          type="button"
-                          class="btn btn-outline-secondary"
-                          onclick="addFeature()"
-                        >
-                          <i class="fas fa-plus"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="d-flex gap-3">
-                    <button type="submit" class="btn btn-primary">
-                      <i class="fas fa-save me-2"></i>Enregistrer le projet
-                    </button>
+              <!-- Gestion des projets -->
+              <div class="tab-pane fade" id="manageProjects">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-4"
+                >
+                  <h3 class="h4 mb-0">
+                    <i class="fas fa-project-diagram me-2"></i>Gestion des
+                    projets
+                  </h3>
+                  <div class="d-flex gap-2">
                     <button
-                      type="button"
-                      class="btn btn-outline-secondary"
-                      onclick="resetForm()"
+                      class="btn btn-ice"
+                      onclick="window.adminManager.openAddProjectModal()"
                     >
-                      <i class="fas fa-redo me-2"></i>Réinitialiser
+                      <i class="fas fa-plus me-1"></i>Nouveau projet
                     </button>
                   </div>
-                </form>
+                </div>
+
+                <!-- Statistiques -->
+                <div class="row mb-4">
+                  <div class="col-md-3 mb-3">
+                    <div class="glacial-stat-card">
+                      <div class="stat-icon">
+                        <i class="fas fa-project-diagram"></i>
+                      </div>
+                      <div class="stat-content">
+                        <h4 id="totalProjects">0</h4>
+                        <p>Total</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <div class="glacial-stat-card">
+                      <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                      </div>
+                      <div class="stat-content">
+                        <h4 id="publishedProjects">0</h4>
+                        <p>Publiés</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <div class="glacial-stat-card">
+                      <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                      </div>
+                      <div class="stat-content">
+                        <h4 id="draftProjects">0</h4>
+                        <p>Brouillons</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <div class="glacial-stat-card">
+                      <div class="stat-icon">
+                        <i class="fas fa-trash"></i>
+                      </div>
+                      <div class="stat-content">
+                        <h4 id="deletedProjects">0</h4>
+                        <p>Supprimés</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tableau dynamique glacial -->
+                <div id="glacialProjectsTable"></div>
               </div>
 
-              <!-- Liste des projets -->
-              <div class="tab-pane fade" id="listProjects">
-                <h3 class="h4 mb-4">Projets existants</h3>
-                <div class="table-responsive">
-                  <table class="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Titre</th>
-                        <th>Catégorie</th>
-                        <th>Statut</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody id="projectsTableBody">
-                      <!-- Les projets seront chargés ici -->
-                    </tbody>
-                  </table>
+              <!-- Expériences (à compléter) -->
+              <div class="tab-pane fade" id="manageExperiences">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-4"
+                >
+                  <h3 class="h4 mb-0">
+                    <i class="fas fa-briefcase me-2"></i>Gestion des expériences
+                  </h3>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-ice">
+                      <i class="fas fa-plus me-1"></i>Nouvelle expérience
+                    </button>
+                  </div>
+                </div>
+                <div class="alert-ice alert-ice-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Section en développement. Bientôt disponible.
+                </div>
+              </div>
+
+              <!-- Messages (à compléter) -->
+              <div class="tab-pane fade" id="manageContacts">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-4"
+                >
+                  <h3 class="h4 mb-0">
+                    <i class="fas fa-envelope me-2"></i>Gestion des messages
+                  </h3>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-ice">
+                      <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                  </div>
+                </div>
+                <div class="alert-ice alert-ice-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Section en développement. Bientôt disponible.
                 </div>
               </div>
             </div>
@@ -370,9 +203,283 @@
       </div>
     </div>
 
-    <!-- Modal Édition Projet -->
-    <!-- Modal Édition Projet -->
+    <!-- Modal Ajout Projet -->
+    <!-- Modal Ajout Projet -->
+    <div class="modal fade glacial-modal" id="addProjectModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content glacial-modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-plus-circle me-2"></i>Nouveau projet
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-ice"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+             <form id="addProjectForm">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Titre du projet *</label>
+                  <input
+                    type="text"
+                    class="form-control glacial-input"
+                    id="modal_title"
+                    required
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Catégorie</label>
+                  <select class="glacial-select" id="modal_category">
+                    <option value="fullstack">Full-Stack</option>
+                    <option value="frontend">Frontend</option>
+                    <option value="backend">Backend</option>
+                    <option value="mobile">Mobile</option>
+                    <option value="design">Design</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Description courte *</label>
+                <textarea
+                  class="form-control glacial-input"
+                  id="modal_short_description"
+                  rows="2"
+                  maxlength="500"
+                  required
+                ></textarea>
+                <small class="text-muted">Maximum 500 caractères</small>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Description complète *</label>
+                <textarea
+                  class="form-control glacial-input"
+                  id="modal_full_description"
+                  rows="5"
+                  required
+                ></textarea>
+              </div>
+
+              <!-- Images -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Image principale</label>
+                  <div class="mb-2">
+                    <div
+                      id="modal_main_image_preview"
+                      class="image-preview-container"
+                    >
+                      <i class="fas fa-image fa-3x text-muted"></i>
+                      <p class="mt-2 text-muted">Aucune image</p>
+                    </div>
+                  </div>
+                  <div class="glacial-input-group">
+                    <input
+                      type="file"
+                      class="form-control"
+                      id="modal_mainImageInput"
+                      accept="image/*"
+                    />
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      onclick="document.getElementById('modal_mainImageInput').click()"
+                    >
+                      <i class="fas fa-upload"></i> Uploader
+                    </button>
+                  </div>
+                  <input
+                    type="hidden"
+                    class="form-control mt-2"
+                    id="modal_main_image_url"
+                  />
+                  <small class="text-muted"
+                    >Format: JPG, PNG, GIF, WebP (max 5MB)</small
+                  >
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Miniature</label>
+                  <div class="mb-2">
+                    <div
+                      id="modal_thumbnail_preview"
+                      class="image-preview-container"
+                    >
+                      <i class="fas fa-image fa-3x text-muted"></i>
+                      <p class="mt-2 text-muted">Aucune image</p>
+                    </div>
+                  </div>
+                  <div class="glacial-input-group">
+                    <input
+                      type="file"
+                      class="form-control"
+                      id="modal_thumbnailImageInput"
+                      accept="image/*"
+                    />
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      onclick="document.getElementById('modal_thumbnailImageInput').click()"
+                    >
+                      <i class="fas fa-upload"></i> Uploader
+                    </button>
+                  </div>
+                  <input
+                    type="hidden"
+                    class="form-control mt-2"
+                    id="modal_thumbnail_url"
+                  />
+                  <small class="text-muted"
+                    >Générée automatiquement si laissée vide</small
+                  >
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">URL GitHub</label>
+                  <input
+                    type="url"
+                    class="form-control glacial-input"
+                    id="modal_github_url"
+                    placeholder="https://github.com/..."
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">URL de démo</label>
+                  <input
+                    type="url"
+                    class="form-control glacial-input"
+                    id="modal_demo_url"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Nom du client</label>
+                  <input
+                    type="text"
+                    class="form-control glacial-input"
+                    id="modal_client_name"
+                    placeholder="Nom du client ou entreprise"
+                  />
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Date du projet</label>
+                  <input
+                    type="date"
+                    class="form-control glacial-input"
+                    id="modal_project_date"
+                  />
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Ordre d'affichage</label>
+                  <input
+                    type="number"
+                    class="form-control glacial-input"
+                    id="modal_display_order"
+                    value="0"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <div class="glacial-checkbox">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="modal_featured"
+                    />
+                    <span class="checkmark"></span>
+                    <span class="label">
+                      <i class="fas fa-star text-warning me-1"></i>Mettre en
+                      avant
+                    </span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Statut</label>
+                  <select class="glacial-select" id="modal_status">
+                    <option value="published">Publié</option>
+                    <option value="draft">Brouillon</option>
+                    <option value="archived">Archivé</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Technologies utilisées</label>
+                <div id="modal_technologiesContainer">
+                  <div class="glacial-input-group mb-2">
+                    <input
+                      type="text"
+                      class="form-control glacial-input"
+                      placeholder="Ex: React, Node.js..."
+                      id="modal_technology_input"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      onclick="addModalTechnology()"
+                    >
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <small class="text-muted"
+                  >Appuyez sur Entrée ou cliquez sur + pour ajouter</small
+                >
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label">Fonctionnalités principales</label>
+                <div id="modal_featuresContainer">
+                  <div class="glacial-input-group mb-2">
+                    <input
+                      type="text"
+                      class="form-control glacial-input"
+                      placeholder="Ex: Authentification, Dashboard..."
+                      id="modal_feature_input"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      onclick="addModalFeature()"
+                    >
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-ice">
+                  <i class="fas fa-save me-2"></i>Enregistrer le projet
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-ice"
+                  onclick="resetModalForm()"
+                >
+                  <i class="fas fa-redo me-2"></i>Réinitialiser
+                </button>
+              </div>
+            </form> 
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Édition Projet (inchangé) -->
     <div class="modal fade" id="editProjectModal" tabindex="-1">
+      <!-- VOTRE MODAL D'ÉDITION RESTE IDENTIQUE -->
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -434,23 +541,16 @@
 
               <!-- Section Images avec Upload -->
               <div class="row">
-                <!-- Image principale -->
                 <div class="col-md-6 mb-4">
                   <label class="form-label">
                     <i class="fas fa-image me-1"></i>Image principale
                   </label>
-
-                  <!-- Prévisualisation -->
                   <div class="mb-3">
                     <div
                       id="edit_main_image_preview"
                       class="image-preview-container"
-                    >
-                      <!-- L'image sera chargée ici -->
-                    </div>
+                    ></div>
                   </div>
-
-                  <!-- Boutons d'action -->
                   <div class="btn-group w-100 mb-2" role="group">
                     <button
                       type="button"
@@ -467,16 +567,12 @@
                       <i class="fas fa-times me-1"></i>Effacer
                     </button>
                   </div>
-
-                  <!-- Input fichier caché -->
                   <input
                     type="file"
                     class="d-none"
                     id="edit_main_image_file"
                     accept="image/*"
                   />
-
-                  <!-- Champ URL (rempli automatiquement) -->
                   <div class="input-group mt-2">
                     <span class="input-group-text">
                       <i class="fas fa-link"></i>
@@ -503,23 +599,16 @@
                   </small>
                 </div>
 
-                <!-- Miniature -->
                 <div class="col-md-6 mb-4">
                   <label class="form-label">
                     <i class="fas fa-image me-1"></i>Miniature
                   </label>
-
-                  <!-- Prévisualisation -->
                   <div class="mb-3">
                     <div
                       id="edit_thumbnail_preview"
                       class="image-preview-container"
-                    >
-                      <!-- L'image sera chargée ici -->
-                    </div>
+                    ></div>
                   </div>
-
-                  <!-- Boutons d'action -->
                   <div class="btn-group w-100 mb-2" role="group">
                     <button
                       type="button"
@@ -536,16 +625,12 @@
                       <i class="fas fa-times me-1"></i>Effacer
                     </button>
                   </div>
-
-                  <!-- Input fichier caché -->
                   <input
                     type="file"
                     class="d-none"
                     id="edit_thumbnail_file"
                     accept="image/*"
                   />
-
-                  <!-- Champ URL (rempli automatiquement) -->
                   <div class="input-group mt-2">
                     <span class="input-group-text">
                       <i class="fas fa-link"></i>
@@ -573,7 +658,6 @@
                 </div>
               </div>
 
-              <!-- URLs externes -->
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label class="form-label">
@@ -599,7 +683,6 @@
                 </div>
               </div>
 
-              <!-- Informations supplémentaires -->
               <div class="row">
                 <div class="col-md-4 mb-3">
                   <label class="form-label">
@@ -636,14 +719,11 @@
                 </div>
               </div>
 
-              <!-- Technologies -->
               <div class="mb-4">
                 <label class="form-label">
                   <i class="fas fa-code me-1"></i>Technologies utilisées
                 </label>
-                <div id="edit_technologies_container">
-                  <!-- Les champs technologies seront ajoutés ici -->
-                </div>
+                <div id="edit_technologies_container"></div>
                 <div class="d-flex gap-2 mt-2">
                   <button
                     type="button"
@@ -662,14 +742,11 @@
                 </div>
               </div>
 
-              <!-- Fonctionnalités -->
               <div class="mb-4">
                 <label class="form-label">
                   <i class="fas fa-star me-1"></i>Fonctionnalités principales
                 </label>
-                <div id="edit_features_container">
-                  <!-- Les champs features seront ajoutés ici -->
-                </div>
+                <div id="edit_features_container"></div>
                 <div class="d-flex gap-2 mt-2">
                   <button
                     type="button"
@@ -688,7 +765,6 @@
                 </div>
               </div>
 
-              <!-- Options -->
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <div class="form-check form-switch">
@@ -733,11 +809,16 @@
       </div>
     </div>
 
-    <!-- Scripts additionnels pour le modal -->
+    
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="js/admin.js"></script>
+    <!-- Scripts pour les tableaux glacials -->
+    <script src="js/admin/table-manager.js"></script>
+    <script src="js/admin/init.js"></script>
+
+    <!-- Scripts pour le modal d'ajout -->
   </body>
 </html>

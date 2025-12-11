@@ -2,6 +2,7 @@ class UploadManager {
     static API_BASE_URL = window.location.origin + '/portfoliodim/back/api/';
 
     constructor() {
+        // Récupération des éléments DOM pour l'upload d'images
         this.mainImageInput = document.getElementById('mainImageInput');
         this.thumbnailImageInput = document.getElementById('thumbnailImageInput');
         this.mainImagePreview = document.getElementById('mainImagePreview');
@@ -9,11 +10,13 @@ class UploadManager {
         this.mainImageUrlInput = document.getElementById('main_image_url');
         this.thumbnailUrlInput = document.getElementById('thumbnail_url');
         
+        // Initialisation des événements si les inputs existent
         if (this.mainImageInput || this.thumbnailImageInput) {
             this.bindEvents();
         }
     }
 
+    // Configuration des écouteurs d'événements pour les uploads
     bindEvents() {
         if (this.mainImageInput) {
             this.mainImageInput.addEventListener('change', (e) => {
@@ -28,15 +31,18 @@ class UploadManager {
         }
     }
 
+    // Gestion de l'upload d'une image
     async handleImageUpload(file, type) {
         if (!file) return;
 
+        // Afficher un aperçu immédiat
         this.showPreview(file, type);
 
         try {
             const formData = new FormData();
             formData.append('image', file);
 
+            // Envoi de l'image au serveur
             const response = await fetch(this.constructor.API_BASE_URL + 'upload.php', {
                 method: 'POST',
                 body: formData,
@@ -46,6 +52,7 @@ class UploadManager {
             const data = await response.json();
 
             if (data.success) {
+                // Remplir automatiquement le champ URL correspondant
                 if (type === 'main' && this.mainImageUrlInput) {
                     this.mainImageUrlInput.value = data.data.main_image_url;
                 } else if (type === 'thumbnail' && this.thumbnailUrlInput) {
@@ -58,11 +65,12 @@ class UploadManager {
                 this.showMessage('Erreur: ' + (data.error || 'Erreur lors de l\'upload'), 'error');
             }
         } catch (error) {
-            console.error('Upload error:', error);
+            console.error('Erreur upload:', error);
             this.showMessage('Erreur de connexion au serveur', 'error');
         }
     }
 
+    // Afficher un aperçu de l'image avant upload
     showPreview(file, type) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -77,6 +85,7 @@ class UploadManager {
         reader.readAsDataURL(file);
     }
 
+    // Afficher un message de notification
     showMessage(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
@@ -94,6 +103,7 @@ class UploadManager {
         
         document.body.appendChild(notification);
         
+        // Auto-suppression après 5 secondes
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.remove();
@@ -104,23 +114,25 @@ class UploadManager {
 
 class AdminManager {
     constructor() {
-        console.log("🎯 Démarrage de l'administration...");
-        
+        // Configuration de l'URL de base de l'API
         this.API_BASE_URL = "http://localhost/portfoliodim/back/api/";
-        console.log("🌐 URL de l'API :", this.API_BASE_URL);
         
-        this.projectsTableBody = document.getElementById("projectsTableBody");
-        this.projectForm = document.getElementById("projectForm");
+        // Récupération des éléments DOM principaux
         this.logoutBtn = document.getElementById("logoutBtn");
         
+        // Initialisation du gestionnaire d'upload
         this.uploadManager = new UploadManager();
         
+        // Configurer les boutons du modal IMMÉDIATEMENT
+        this.setupModalButtons();
+
+        // Initialisation de l'admin
         this.init();
     }
 
+    // Initialisation principale
     async init() {
-        console.log("🔐 Vérification de la connexion...");
-        
+        // Vérification de l'authentification
         const estConnecte = await this.verifierConnexion();
         
         if (!estConnecte) {
@@ -131,197 +143,70 @@ class AdminManager {
             return;
         }
         
-        console.log("✅ Utilisateur connecté !");
-        
+        // Configuration des fonctionnalités
         this.configurerBoutons();
         await this.chargerProjets();
         this.configurerChampsDynamiques();
     }
 
+    // Vérifier si l'utilisateur est connecté
     async verifierConnexion() {
         try {
             const url = this.API_BASE_URL + "auth.php?action=check";
-            console.log("📡 Appel à :", url);
             
             const reponse = await fetch(url, {
                 method: "GET",
                 credentials: "include"
             });
             
-            console.log("📥 Réponse reçue, statut :", reponse.status);
-            
             const texte = await reponse.text();
-            console.log("📄 Contenu brut :", texte.substring(0, 200));
             
             if (texte.includes("<!DOCTYPE")) {
-                console.error("❌ Le serveur envoie du HTML, pas du JSON !");
-                return false;
+                return false; // Le serveur retourne du HTML au lieu de JSON
             }
             
             const donnees = JSON.parse(texte);
-            console.log("✅ Données JSON :", donnees);
             
             return donnees.authenticated === true;
             
         } catch (erreur) {
-            console.error("💥 ERREUR lors de la vérification :", erreur);
+            console.error("Erreur vérification connexion:", erreur);
             return false;
         }
     }
 
+    // Charger la liste des projets depuis l'API
     async chargerProjets() {
-        if (!this.projectsTableBody) {
-            console.error("❌ Tableau des projets non trouvé !");
-            return;
-        }
-        
         try {
+            // Charger les projets pour AdminManager si nécessaire
             const url = this.API_BASE_URL + "projetApi.php?action=admin_list";
-            console.log("📡 Chargement des projets depuis :", url);
-            
-            const reponse = await fetch(url, {
-                credentials: "include"
-            });
-            
+            const reponse = await fetch(url, { credentials: "include" });
             const texte = await reponse.text();
-            console.log("📄 Réponse brute :", texte.substring(0, 300));
             
             if (texte.includes("<!DOCTYPE")) {
-                this.projectsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-danger">
-                            ❌ ERREUR : Le serveur retourne du HTML au lieu de JSON<br>
-                            <small>Vérifiez que projetApi.php existe</small>
-                        </td>
-                    </tr>
-                `;
+                console.error("ERREUR : Le serveur retourne du HTML au lieu de JSON");
                 return;
             }
             
             const donnees = JSON.parse(texte);
             
             if (donnees.success) {
-                this.afficherProjets(donnees.projects);
+                // Stocker les projets dans AdminManager pour usage interne
+                this.projects = donnees.projects;
+                
+                // Ne plus appeler afficherProjets car on utilise GlacialTableManager
+                console.log('Projets chargés:', donnees.projects.length);
             } else {
-                this.projectsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-danger">
-                            ❌ ${donnees.error || "Erreur inconnue"}
-                        </td>
-                    </tr>
-                `;
+                console.error('Erreur API:', donnees.error);
             }
             
         } catch (erreur) {
-            console.error("💥 ERREUR lors du chargement :", erreur);
-            this.projectsTableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-center text-danger">
-                        ❌ Impossible de charger les projets<br>
-                        <small>${erreur.message}</small>
-                    </td>
-                </tr>
-            `;
+            console.error("Erreur chargement projets:", erreur);
         }
     }
 
- afficherProjets(projets) {
-    let html = "";
-    
-    if (!projets || projets.length === 0) {
-        html = `
-            <tr>
-                <td colspan="5" class="text-center text-muted">
-                    📭 Aucun projet pour le moment
-                </td>
-            </tr>
-        `;
-    } else {
-        projets.forEach(projet => {
-            const date = new Date(projet.created_at).toLocaleDateString("fr-FR");
-            
-            // Déterminer la couleur du badge de statut
-            let statusClass = 'bg-secondary';
-            let statusText = 'Inconnu';
-            
-            switch(projet.status) {
-                case 'published':
-                    statusClass = 'bg-success';
-                    statusText = 'Publié';
-                    break;
-                case 'draft':
-                    statusClass = 'bg-warning text-dark';
-                    statusText = 'Brouillon';
-                    break;
-                case 'archived':
-                    statusClass = 'bg-dark';
-                    statusText = 'Archivé';
-                    break;
-                case 'deleted':
-                    statusClass = 'bg-danger';
-                    statusText = 'Supprimé';
-                    break;
-            }
-            
-            // Si le projet est supprimé, l'afficher en grisé
-            const rowClass = projet.status === 'deleted' ? 'text-muted bg-light' : '';
-            
-            html += `
-                <tr class="${rowClass}">
-                    <td>
-                        ${projet.title}
-                        ${projet.status === 'deleted' ? '<i class="fas fa-trash ms-2 text-danger"></i>' : ''}
-                    </td>
-                    <td><span class="badge bg-primary">${projet.category}</span></td>
-                    <td>
-                        <span class="badge ${statusClass}">
-                            ${statusText}
-                        </span>
-                    </td>
-                    <td>${date}</td>
-                    <td>
-                        ${projet.status !== 'deleted' ? `
-                        <button class="btn btn-sm btn-outline-primary" 
-                                onclick="window.adminManager && window.adminManager.editProject(${projet.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        ` : ''}
-                        
-                        ${projet.status === 'deleted' ? `
-                        <button class="btn btn-sm btn-outline-secondary" 
-                                onclick="window.adminManager && window.adminManager.restoreProject(${projet.id})"
-                                title="Restaurer">
-                            <i class="fas fa-undo"></i>
-                        </button>
-                        
-                        <button class="btn btn-sm btn-outline-danger ms-2" 
-                                onclick="window.adminManager && window.adminManager.deletePermanently(${projet.id})"
-                                title="Supprimer définitivement">
-                            <i class="fas fa-skull-crossbones"></i>
-                        </button>
-                        ` : `
-                        <button class="btn btn-sm btn-outline-danger ms-2" 
-                                onclick="window.adminManager && window.adminManager.deleteProject(${projet.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        `}
-                    </td>
-                </tr>
-            `;
-        });
-    }
-    
-    this.projectsTableBody.innerHTML = html;
-}
-
+    // Configurer les écouteurs d'événements des boutons
     configurerBoutons() {
-        if (this.projectForm) {
-            this.projectForm.addEventListener("submit", (e) => {
-                e.preventDefault();
-                this.creerProjet();
-            });
-        }
-        
         if (this.logoutBtn) {
             this.logoutBtn.addEventListener("click", () => {
                 this.deconnexion();
@@ -329,21 +214,22 @@ class AdminManager {
         }
     }
 
+    // Configurer les champs dynamiques (technologies et fonctionnalités)
     configurerChampsDynamiques() {
-        // Écoute au niveau du document pour les touches Entrée
+        // Écouter la touche Entrée pour ajouter des éléments
         document.addEventListener("keypress", (e) => {
-            if (e.target.classList.contains("technology-input") && e.key === "Enter") {
+            if (e.target.classList.contains("edit-technology-input") && e.key === "Enter") {
                 e.preventDefault();
-                this.ajouterTechnologie();
+                window.addEditTechnology();
             }
             
-            if (e.target.classList.contains("feature-input") && e.key === "Enter") {
+            if (e.target.classList.contains("edit-feature-input") && e.key === "Enter") {
                 e.preventDefault();
-                this.ajouterFonctionnalite();
+                window.addEditFeature();
             }
         });
 
-          // Prévisualisation images édition
+        // Prévisualisation des images en édition
         document.getElementById('edit_main_image_url')?.addEventListener('input', (e) => {
             this.updateImagePreview('edit_main_image_url', 'edit_main_image_preview');
         });
@@ -353,10 +239,10 @@ class AdminManager {
         });
     }
 
+    // Créer un nouveau projet (pour le formulaire caché si existant)
     async creerProjet() {
         try {
-            console.log("🚀 Démarrage de la création du projet...");
-            
+            // Récupération des données du formulaire
             const donneesProjet = {
                 title: document.getElementById("title")?.value.trim() || "",
                 short_description: document.getElementById("short_description")?.value.trim() || "",
@@ -375,8 +261,7 @@ class AdminManager {
                 status: document.getElementById("status")?.value || "published"
             };
             
-            console.log("📦 Données récupérées du formulaire :", donneesProjet);
-            
+            // Validation des données
             const erreurs = [];
             
             if (!donneesProjet.title) {
@@ -400,6 +285,7 @@ class AdminManager {
                 return;
             }
             
+            // État "chargement" pour le bouton
             const btnSubmit = document.querySelector("#projectForm button[type='submit']");
             let texteOriginal = "";
             if (btnSubmit) {
@@ -408,8 +294,8 @@ class AdminManager {
                 btnSubmit.disabled = true;
             }
             
+            // Envoi de la requête à l'API
             const url = this.API_BASE_URL + "projetApi.php?action=create";
-            console.log("📡 Envoi POST à :", url);
             
             const reponse = await fetch(url, {
                 method: "POST",
@@ -420,48 +306,33 @@ class AdminManager {
                 body: JSON.stringify(donneesProjet)
             });
             
-            console.log("📥 Réponse reçue, statut :", reponse.status);
-            
             const texteReponse = await reponse.text();
-            console.log("📄 Réponse brute :", texteReponse);
             
             let resultat;
             try {
                 resultat = JSON.parse(texteReponse);
             } catch (e) {
-                console.error("❌ La réponse n'est pas du JSON valide :", e);
+                console.error("Réponse JSON invalide:", e);
                 throw new Error("Le serveur a retourné une réponse invalide");
             }
             
-            console.log("✅ Réponse JSON parsée :", resultat);
-            
             if (reponse.ok && resultat.success) {
-                console.log("🎉 Projet créé avec succès ! ID :", resultat.project_id);
-                
                 this.showAlert("✅ Projet créé avec succès ! ID : " + resultat.project_id, "success");
                 
-                this.reinitialiserFormulaire();
-                
+                // Recharger les projets
                 await this.chargerProjets();
-                
-                const listProjectsTab = document.getElementById("listProjects");
-                if (listProjectsTab) {
-                    listProjectsTab.scrollIntoView({ behavior: "smooth" });
-                }
                 
             } else {
                 const messageErreur = resultat.error || "Erreur inconnue lors de la création";
-                console.error("❌ Erreur du serveur :", messageErreur);
-                
                 this.showAlert("❌ " + messageErreur, "error");
             }
             
         } catch (erreur) {
-            console.error("💥 Erreur lors de la création du projet :", erreur);
-            
+            console.error("Erreur création projet:", erreur);
             this.showAlert("❌ Erreur : " + erreur.message, "error");
             
         } finally {
+            // Restauration du bouton
             const btnSubmit = document.querySelector("#projectForm button[type='submit']");
             if (btnSubmit) {
                 btnSubmit.innerHTML = '<i class="fas fa-save me-2"></i>Créer le projet';
@@ -470,6 +341,7 @@ class AdminManager {
         }
     }
 
+    // Récupérer les technologies saisies (pour formulaire caché)
     getTechnologies() {
         const inputs = document.querySelectorAll("#technologiesContainer input[type='text']");
         const technologies = [];
@@ -484,6 +356,7 @@ class AdminManager {
         return technologies;
     }
 
+    // Récupérer les fonctionnalités saisies (pour formulaire caché)
     getFeatures() {
         const inputs = document.querySelectorAll("#featuresContainer input[type='text']");
         const features = [];
@@ -498,6 +371,7 @@ class AdminManager {
         return features;
     }
 
+    // Afficher une alerte
     showAlert(message, type = 'info') {
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show`;
@@ -510,6 +384,7 @@ class AdminManager {
         const container = document.querySelector(".admin-container") || document.body;
         container.insertBefore(alertDiv, container.firstChild);
         
+        // Auto-suppression après 5 secondes
         setTimeout(() => {
             if (alertDiv.parentNode) {
                 alertDiv.remove();
@@ -517,6 +392,7 @@ class AdminManager {
         }, 5000);
     }
 
+    // Déconnexion
     async deconnexion() {
         try {
             const reponse = await fetch(this.API_BASE_URL + "auth.php?action=logout", {
@@ -530,99 +406,357 @@ class AdminManager {
                 window.location.href = "login.html";
             }
         } catch (erreur) {
-            console.error("Erreur de déconnexion :", erreur);
+            console.error("Erreur de déconnexion:", erreur);
         }
     }
 
-    ajouterTechnologie() {
-        console.log("➕ Appel de ajouterTechnologie");
-        const container = document.getElementById("technologiesContainer");
-        if (!container) {
-            console.error("❌ Container technologies non trouvé");
+    // ==============================================
+    // GESTION DU MODAL D'AJOUT
+    // ==============================================
+
+    // Configurer les boutons du modal
+    setupModalButtons() {
+        // Configurer le bouton "Nouveau projet"
+        const addProjectBtn = document.querySelector('[onclick*="openAddProjectModal"]');
+        if (addProjectBtn) {
+            // Remplacer l'attribut onclick par un écouteur d'événements
+            addProjectBtn.removeAttribute('onclick');
+            addProjectBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.openAddProjectModal) {
+                    this.openAddProjectModal();
+                } else {
+                    console.error('openAddProjectModal non disponible');
+                    // Fallback
+                    const modal = new bootstrap.Modal(document.getElementById('addProjectModal'));
+                    modal.show();
+                }
+            });
+            console.log('Bouton "Nouveau projet" configuré');
+        }
+    }
+
+    // Ouvrir le modal d'ajout de projet
+    openAddProjectModal() {
+        console.log('Méthode openAddProjectModal appelée');
+        
+        // Récupérer le formulaire modal
+        const modalForm = document.getElementById('addProjectForm');
+        if (!modalForm) {
+            console.error('Formulaire modal non trouvé');
             return;
         }
         
-        // Créer un nouveau champ
-        const div = document.createElement("div");
-        div.className = "input-group mb-2";
-        div.innerHTML = `
-            <input type="text" class="form-control technology-input" placeholder="Nouvelle technologie...">
-            <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
+        // Réinitialiser le formulaire
+        this.resetModalForm();
         
-        container.appendChild(div);
+        // Configurer la soumission du formulaire
+        modalForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.submitModalForm();
+        });
         
-        // Focus sur le nouveau champ
-        const nouveauInput = div.querySelector("input");
-        nouveauInput.focus();
+        // Configurer l'upload d'images
+        this.setupModalUploads();
         
-        console.log("✅ Nouveau champ technologie ajouté");
+        // Ouvrir le modal
+        const modal = new bootstrap.Modal(document.getElementById('addProjectModal'));
+        modal.show();
     }
 
-    ajouterFonctionnalite() {
-        console.log("➕ Appel de ajouterFonctionnalite");
-        const container = document.getElementById("featuresContainer");
-        if (!container) {
-            console.error("❌ Container features non trouvé");
-            return;
-        }
+    // Réinitialiser le formulaire modal
+    resetModalForm() {
+        const modalForm = document.getElementById('addProjectForm');
+        if (!modalForm) return;
         
-        // Créer un nouveau champ
-        const div = document.createElement("div");
-        div.className = "input-group mb-2";
-        div.innerHTML = `
-            <input type="text" class="form-control feature-input" placeholder="Nouvelle fonctionnalité...">
-            <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
+        modalForm.reset();
         
-        container.appendChild(div);
-        
-        // Focus sur le nouveau champ
-        const nouveauInput = div.querySelector("input");
-        nouveauInput.focus();
-        
-        console.log("✅ Nouveau champ fonctionnalité ajouté");
-    }
-
-    reinitialiserFormulaire() {
-        if (this.projectForm) {
-            this.projectForm.reset();
-        }
-        
-        const techContainer = document.getElementById("technologiesContainer");
+        // Réinitialiser les technologies
+        const techContainer = document.getElementById('modal_technologiesContainer');
         if (techContainer) {
             techContainer.innerHTML = `
-                <div class="input-group mb-2">
-                    <input type="text" class="form-control technology-input" placeholder="Ex: React, Node.js...">
-                    <button class="btn btn-outline-secondary" type="button" onclick="addTechnology()">
+                <div class="glacial-input-group mb-2">
+                    <input type="text" class="form-control glacial-input" 
+                           placeholder="Ex: React, Node.js..." 
+                           id="modal_technology_input">
+                    <button type="button" class="btn btn-outline-secondary" onclick="addModalTechnology()">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
             `;
         }
         
-        const featuresContainer = document.getElementById("featuresContainer");
+        // Réinitialiser les fonctionnalités
+        const featuresContainer = document.getElementById('modal_featuresContainer');
         if (featuresContainer) {
             featuresContainer.innerHTML = `
-                <div class="input-group mb-2">
-                    <input type="text" class="form-control feature-input" placeholder="Ex: Authentification, Dashboard...">
-                    <button class="btn btn-outline-secondary" type="button" onclick="addFeature()">
+                <div class="glacial-input-group mb-2">
+                    <input type="text" class="form-control glacial-input" 
+                           placeholder="Ex: Authentification, Dashboard..." 
+                           id="modal_feature_input">
+                    <button type="button" class="btn btn-outline-secondary" onclick="addModalFeature()">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
             `;
+        }
+        
+        // Date par défaut = aujourd'hui
+        const dateInput = document.getElementById('modal_project_date');
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().split('T')[0];
         }
     }
 
-    async editProject(projectId) {
-        console.log("✏️ Modification du projet ID:", projectId);
+    // Configurer les uploads pour le modal
+    setupModalUploads() {
+        // Image principale
+        const mainImageInput = document.getElementById('modal_mainImageInput');
+        const mainImagePreview = document.getElementById('modal_main_image_preview');
+        const mainImageUrl = document.getElementById('modal_main_image_url');
         
+        if (mainImageInput && this.uploadManager) {
+            mainImageInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Afficher l'aperçu
+                if (mainImagePreview) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        mainImagePreview.innerHTML = `
+                            <img src="${e.target.result}" alt="Aperçu" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+                
+                // Upload vers le serveur
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    const response = await fetch(this.uploadManager.constructor.API_BASE_URL + 'upload.php', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && mainImageUrl) {
+                        mainImageUrl.value = data.data.main_image_url;
+                        this.uploadManager.showMessage('Image principale uploadée avec succès!', 'success');
+                    } else {
+                        this.uploadManager.showMessage('Erreur: ' + (data.error || 'Erreur lors de l\'upload'), 'error');
+                    }
+                } catch (error) {
+                    console.error('Erreur upload modal:', error);
+                    this.uploadManager.showMessage('Erreur de connexion au serveur', 'error');
+                }
+            });
+        }
+        
+        // Miniature
+        const thumbnailInput = document.getElementById('modal_thumbnailImageInput');
+        const thumbnailPreview = document.getElementById('modal_thumbnail_preview');
+        const thumbnailUrl = document.getElementById('modal_thumbnail_url');
+        
+        if (thumbnailInput && this.uploadManager) {
+            thumbnailInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Afficher l'aperçu
+                if (thumbnailPreview) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        thumbnailPreview.innerHTML = `
+                            <img src="${e.target.result}" alt="Aperçu" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+                
+                // Upload vers le serveur
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    const response = await fetch(this.uploadManager.constructor.API_BASE_URL + 'upload.php', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && thumbnailUrl) {
+                        thumbnailUrl.value = data.data.thumbnail_url || data.data.main_image_url;
+                        this.uploadManager.showMessage('Miniature uploadée avec succès!', 'success');
+                    } else {
+                        this.uploadManager.showMessage('Erreur: ' + (data.error || 'Erreur lors de l\'upload'), 'error');
+                    }
+                } catch (error) {
+                    console.error('Erreur upload modal:', error);
+                    this.uploadManager.showMessage('Erreur de connexion au serveur', 'error');
+                }
+            });
+        }
+    }
+
+    // Soumettre le formulaire modal
+    async submitModalForm() {
         try {
-            // Récupérer les détails du projet
+            const modalForm = document.getElementById('addProjectForm');
+            if (!modalForm) return;
+            
+            // Récupérer les technologies depuis le modal
+            const technologies = this.getModalTechnologiesFromDOM();
+            // Récupérer les fonctionnalités depuis le modal
+            const features = this.getModalFeaturesFromDOM();
+            
+            // Récupérer les données du formulaire modal
+            const donneesProjet = {
+                title: modalForm.querySelector('#modal_title')?.value.trim() || "",
+                short_description: modalForm.querySelector('#modal_short_description')?.value.trim() || "",
+                full_description: modalForm.querySelector('#modal_full_description')?.value.trim() || "",
+                category: modalForm.querySelector('#modal_category')?.value || "fullstack",
+                technologies: technologies,
+                features: features,
+                thumbnail_url: modalForm.querySelector('#modal_thumbnail_url')?.value.trim() || null,
+                main_image_url: modalForm.querySelector('#modal_main_image_url')?.value.trim() || null,
+                github_url: modalForm.querySelector('#modal_github_url')?.value.trim() || null,
+                demo_url: modalForm.querySelector('#modal_demo_url')?.value.trim() || null,
+                client_name: modalForm.querySelector('#modal_client_name')?.value.trim() || null,
+                project_date: modalForm.querySelector('#modal_project_date')?.value || new Date().toISOString().split('T')[0],
+                display_order: parseInt(modalForm.querySelector('#modal_display_order')?.value || "0"),
+                featured: modalForm.querySelector('#modal_featured')?.checked ? 1 : 0,
+                status: modalForm.querySelector('#modal_status')?.value || "published"
+            };
+            
+            // Validation
+            const erreurs = [];
+            
+            if (!donneesProjet.title) {
+                erreurs.push("Le titre est obligatoire");
+            }
+            
+            if (!donneesProjet.short_description) {
+                erreurs.push("La description courte est obligatoire");
+            }
+            
+            if (!donneesProjet.full_description) {
+                erreurs.push("La description complète est obligatoire");
+            }
+            
+            if (donneesProjet.short_description.length > 500) {
+                erreurs.push("La description courte ne doit pas dépasser 500 caractères");
+            }
+            
+            if (erreurs.length > 0) {
+                this.showAlert(erreurs.join("\n"), "error");
+                return;
+            }
+            
+            // État "chargement" pour le bouton
+            const submitBtn = modalForm.querySelector('button[type="submit"]');
+            const texteOriginal = submitBtn?.innerHTML || '';
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Création en cours...';
+                submitBtn.disabled = true;
+            }
+            
+            // Envoi de la requête à l'API
+            const url = this.API_BASE_URL + "projetApi.php?action=create";
+            
+            const reponse = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify(donneesProjet)
+            });
+            
+            const texteReponse = await reponse.text();
+            
+            let resultat;
+            try {
+                resultat = JSON.parse(texteReponse);
+            } catch (e) {
+                console.error("Réponse JSON invalide:", e);
+                throw new Error("Le serveur a retourné une réponse invalide");
+            }
+            
+            if (reponse.ok && resultat.success) {
+                this.showAlert("✅ Projet créé avec succès ! ID : " + resultat.project_id, "success");
+                
+                // Fermer le modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
+                modal.hide();
+                
+                // Recharger les projets
+                await this.chargerProjets();
+                
+                // Rafraîchir le tableau glacial s'il existe
+                if (window.glacialTableManager) {
+                    await window.glacialTableManager.refresh();
+                }
+                
+            } else {
+                const messageErreur = resultat.error || "Erreur inconnue lors de la création";
+                this.showAlert("❌ " + messageErreur, "error");
+            }
+            
+        } catch (erreur) {
+            console.error("Erreur création projet modal:", erreur);
+            this.showAlert("❌ Erreur : " + erreur.message, "error");
+            
+        } finally {
+            // Restauration du bouton
+            const submitBtn = document.querySelector('#addProjectForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Enregistrer le projet';
+                submitBtn.disabled = false;
+            }
+        }
+    }
+
+    // Récupérer les technologies depuis le modal
+    getModalTechnologiesFromDOM() {
+        const technologies = [];
+        
+        // Récupérer depuis les inputs cachés
+        const hiddenInputs = document.querySelectorAll('#modal_technologiesContainer input[name="modal_technologies[]"]');
+        hiddenInputs.forEach(input => {
+            if (input.value.trim()) {
+                technologies.push(input.value.trim());
+            }
+        });
+        return technologies;
+    }
+
+    // Récupérer les fonctionnalités depuis le modal
+    getModalFeaturesFromDOM() {
+        const features = [];
+        
+        const hiddenInputs = document.querySelectorAll('#modal_featuresContainer input[name="modal_features[]"]');
+        hiddenInputs.forEach(input => {
+            if (input.value.trim()) {
+                features.push(input.value.trim());
+            }
+        });
+        return features;
+    }
+
+    // ==============================================
+    // GESTION DU MODAL D'ÉDITION
+    // ==============================================
+
+    // Charger un projet pour édition
+    async editProject(projectId) {
+        try {
             const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=admin_get&id=${projectId}`, {
                 credentials: 'include'
             });
@@ -639,19 +773,13 @@ class AdminManager {
                 this.showAlert(data.error || 'Erreur lors du chargement', 'error');
             }
         } catch (error) {
-            console.error('Erreur:', error);
+            console.error('Erreur chargement projet:', error);
             this.showAlert('Impossible de charger le projet', 'error');
         }
     }
 
+    // Ouvrir le modal d'édition avec les données du projet
     openEditModal(project) {
-        console.log("📋 Ouverture modal édition:", project);
-        console.log("this est défini ?", this !== undefined);
-        
-        // Vérifiez que Bootstrap est chargé
-        console.log("Bootstrap existe ?", typeof bootstrap !== 'undefined');
-        console.log("Modal élément:", document.getElementById('editProjectModal'));
-        
         // Remplir les champs du formulaire
         document.getElementById('edit_project_id').value = project.id;
         document.getElementById('edit_title').value = project.title || '';
@@ -668,33 +796,28 @@ class AdminManager {
         document.getElementById('edit_featured').checked = project.featured == 1;
         document.getElementById('edit_status').value = project.status || 'published';
         
-        // Afficher les prévisualisations d'images
+        // Mettre à jour les prévisualisations d'images
         this.updateImagePreview('edit_main_image_url', 'edit_main_image_preview');
         this.updateImagePreview('edit_thumbnail_url', 'edit_thumbnail_preview');
         
-        // Charger les technologies
+        // Charger les technologies et fonctionnalités
         this.loadEditTechnologies(project.technologies || []);
-        
-        // Charger les fonctionnalités
         this.loadEditFeatures(project.features || []);
         
-         // AJOUTEZ CETTE LIGNE IMPORTANTE :
+        // Configurer les uploads d'images pour l'édition
         this.setupEditImageUploads();
-        
-        // ... mettez à jour les prévisualisations
         this.updateEditImagePreview('main');
         this.updateEditImagePreview('thumbnail');
 
-        // Ouvrir le modal
+        // Ouvrir le modal Bootstrap
         const editModal = new bootstrap.Modal(document.getElementById('editProjectModal'));
         editModal.show();
-
-       
         
         // Configurer l'événement de sauvegarde
         this.setupEditSave(project.id);
     }
 
+    // Charger les technologies dans le modal d'édition
     loadEditTechnologies(technologies) {
         const container = document.getElementById('edit_technologies_container');
         container.innerHTML = '';
@@ -708,6 +831,7 @@ class AdminManager {
         }
     }
 
+    // Charger les fonctionnalités dans le modal d'édition
     loadEditFeatures(features) {
         const container = document.getElementById('edit_features_container');
         container.innerHTML = '';
@@ -721,6 +845,7 @@ class AdminManager {
         }
     }
 
+    // Ajouter un champ de technologie dans l'édition
     addEditTechnologyField(value = '') {
         const container = document.getElementById('edit_technologies_container');
         const div = document.createElement('div');
@@ -736,6 +861,7 @@ class AdminManager {
         container.appendChild(div);
     }
 
+    // Ajouter un champ de fonctionnalité dans l'édition
     addEditFeatureField(value = '') {
         const container = document.getElementById('edit_features_container');
         const div = document.createElement('div');
@@ -751,10 +877,11 @@ class AdminManager {
         container.appendChild(div);
     }
 
+    // Configurer l'événement de sauvegarde pour l'édition
     setupEditSave(projectId) {
         const saveBtn = document.getElementById('saveEditProject');
         
-        // Retirer les anciens écouteurs
+        // Remplacer le bouton pour éviter les écouteurs multiples
         saveBtn.replaceWith(saveBtn.cloneNode(true));
         const newSaveBtn = document.getElementById('saveEditProject');
         
@@ -763,9 +890,11 @@ class AdminManager {
         };
     }
 
+    // Sauvegarder les modifications d'un projet
     async saveEditProject(projectId) {
         try {
             const projectData = {
+                id: projectId, // Important: inclure l'ID pour l'update
                 title: document.getElementById('edit_title').value.trim(),
                 short_description: document.getElementById('edit_short_description').value.trim(),
                 full_description: document.getElementById('edit_full_description').value.trim(),
@@ -794,14 +923,14 @@ class AdminManager {
                 return;
             }
             
-            // Bouton loading
+            // État "chargement" pour le bouton
             const saveBtn = document.getElementById('saveEditProject');
             const originalText = saveBtn.innerHTML;
             saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Enregistrement...';
             saveBtn.disabled = true;
             
-            // Envoyer la requête
-            const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=update&id=${projectId}`, {
+            // Envoi de la requête d'update
+            const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=update`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -819,17 +948,17 @@ class AdminManager {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editProjectModal'));
                 modal.hide();
                 
-                // Recharger la liste
+                // Recharger la liste des projets
                 await this.chargerProjets();
             } else {
                 this.showAlert('❌ ' + (data.error || 'Erreur lors de la mise à jour'), 'error');
             }
             
         } catch (error) {
-            console.error('Erreur:', error);
+            console.error('Erreur sauvegarde:', error);
             this.showAlert('❌ Erreur serveur', 'error');
         } finally {
-            // Restaurer le bouton
+            // Restauration du bouton
             const saveBtn = document.getElementById('saveEditProject');
             if (saveBtn) {
                 saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Enregistrer les modifications';
@@ -838,6 +967,7 @@ class AdminManager {
         }
     }
 
+    // Récupérer les technologies du modal d'édition
     getEditTechnologies() {
         const inputs = document.querySelectorAll('#edit_technologies_container .edit-technology-input');
         const technologies = [];
@@ -849,6 +979,7 @@ class AdminManager {
         return technologies;
     }
 
+    // Récupérer les fonctionnalités du modal d'édition
     getEditFeatures() {
         const inputs = document.querySelectorAll('#edit_features_container .edit-feature-input');
         const features = [];
@@ -860,480 +991,457 @@ class AdminManager {
         return features;
     }
 
-  updateImagePreview(inputId, previewId) {
-    const url = document.getElementById(inputId).value;
-    const preview = document.getElementById(previewId);
-    
-    // Image de remplacement (SVG stylé)
-    const placeholderImage = `data:image/svg+xml,%3Csvg width='200' height='150' viewBox='0 0 200 150' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='200' height='150' rx='10' fill='%231E293B'/%3E%3Cpath d='M70 50H50V70H70V50Z' stroke='%23475569' stroke-width='2'/%3E%3Cpath d='M120 50L100 70L140 60L130 65L125 62.5L120 65Z' stroke='%2337A1FF' stroke-width='2'/%3E%3Ccircle cx='60' cy='60' r='5' fill='%2337A1FF'/%3E%3Cpath d='M80 90L100 110M120 90L140 110' stroke='%23475569' stroke-width='2'/%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%2394A3B8' font-size='12'%3E${encodeURIComponent(url ? 'Image configurée' : 'Aucune image')}%3C/text%3E%3C/svg%3E`;
-    
-    if (url) {
-        // Afficher TOUJOURS le placeholder, jamais l'URL réelle
-        preview.innerHTML = `
-            <div class="position-relative">
-                <img src="${placeholderImage}" alt="Placeholder" 
-                     style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
-                <div class="position-absolute bottom-0 start-0 end-0 bg-black/70 text-white p-2 rounded-b-lg">
-                    <small><i class="fas fa-external-link-alt me-1"></i>${url.substring(0, 40)}${url.length > 40 ? '...' : ''}</small>
-                </div>
-            </div>
-            <div class="form-text mt-2">
-                <button class="btn btn-sm btn-outline-info me-2" onclick="window.open('${url}', '_blank')">
-                    <i class="fas fa-external-link-alt me-1"></i>Voir l'image
-                </button>
-                <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('${inputId}').value=''; adminManager.updateImagePreview('${inputId}', '${previewId}')">
-                    <i class="fas fa-trash me-1"></i>Effacer
-                </button>
-            </div>
-        `;
-    } else {
-        preview.innerHTML = `
-            <img src="${placeholderImage}" alt="Aucune image" 
-                 style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
-            <div class="form-text text-center mt-2 text-gray-500">
-                <i class="fas fa-info-circle me-1"></i>Ajoutez une URL d'image
-            </div>
-        `;
-    }
-    }
-// Méthode pour vérifier si une image existe
-    async checkImageExists(url) {
-        try {
-            const response = await fetch(url, {
-                method: 'HEAD',
-                mode: 'no-cors' // Important pour éviter les problèmes CORS
-            });
-            return true;
-        } catch (error) {
-            console.log("Image non disponible:", url);
-            return false;
-        }
-    }
-
-// Dans votre classe AdminManager, AJOUTEZ CES MÉTHODES :
-
-setupEditImageUploads() {
-    console.log("⚙️ Configuration des uploads d'images...");
-    
-    // Configurer l'upload pour l'image principale
-    const mainImageInput = document.getElementById('edit_main_image_file');
-    if (mainImageInput) {
-        mainImageInput.addEventListener('change', (e) => {
-            this.handleEditImageUpload(e.target.files[0], 'main');
-        });
-    }
-    
-    // Configurer l'upload pour la miniature
-    const thumbnailInput = document.getElementById('edit_thumbnail_file');
-    if (thumbnailInput) {
-        thumbnailInput.addEventListener('change', (e) => {
-            this.handleEditImageUpload(e.target.files[0], 'thumbnail');
-        });
-    }
-}
-
-async handleEditImageUpload(file, type) {
-    if (!file) return;
-    
-    console.log(`📤 Upload ${type}:`, file.name);
-    
-    // Afficher une prévisualisation immédiate
-    this.showEditImagePreview(file, type);
-    
-    try {
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        const response = await fetch(this.API_BASE_URL + 'upload.php', {
-            method: 'POST',
-            body: formData,
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Remplir automatiquement le champ URL
-            if (type === 'main') {
-                document.getElementById('edit_main_image_url').value = data.data.main_image_url;
-                this.updateEditImagePreview('main');
-            } else if (type === 'thumbnail') {
-                document.getElementById('edit_thumbnail_url').value = data.data.thumbnail_url || data.data.main_image_url;
-                this.updateEditImagePreview('thumbnail');
-            }
-            
-            this.showAlert('✅ Image uploadée avec succès !', 'success');
-        } else {
-            this.showAlert('❌ Erreur upload: ' + (data.error || 'Erreur inconnue'), 'error');
-            this.updateEditImagePreview(type); // Réafficher le placeholder
-        }
-    } catch (error) {
-        console.error('Upload error:', error);
-        this.showAlert('❌ Erreur de connexion au serveur', 'error');
-        this.updateEditImagePreview(type); // Réafficher le placeholder
-    }
-}
-
-showEditImagePreview(file, type) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const previewId = type === 'main' ? 'edit_main_image_preview' : 'edit_thumbnail_preview';
+    // Mettre à jour la prévisualisation d'une image
+    updateImagePreview(inputId, previewId) {
+        const url = document.getElementById(inputId).value;
         const preview = document.getElementById(previewId);
         
-        preview.innerHTML = `
-            <div class="position-relative" style="width: 100%; height: 150px; border-radius: 8px; overflow: hidden;">
-                <img src="${e.target.result}" alt="Aperçu" 
-                     style="width: 100%; height: 100%; object-fit: cover;">
-                <div class="position-absolute top-2 right-2 badge bg-info">
-                    <i class="fas fa-spinner fa-spin me-1"></i>Upload...
+        // Image SVG de remplacement stylée
+        const placeholderImage = `data:image/svg+xml,%3Csvg width='200' height='150' viewBox='0 0 200 150' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='200' height='150' rx='10' fill='%231E293B'/%3E%3Cpath d='M70 50H50V70H70V50Z' stroke='%23475569' stroke-width='2'/%3E%3Cpath d='M120 50L100 70L140 60L130 65L125 62.5L120 65Z' stroke='%2337A1FF' stroke-width='2'/%3E%3Ccircle cx='60' cy='60' r='5' fill='%2337A1FF'/%3E%3Cpath d='M80 90L100 110M120 90L140 110' stroke='%23475569' stroke-width='2'/%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%2394A3B8' font-size='12'%3E${encodeURIComponent(url ? 'Image configurée' : 'Aucune image')}%3C/text%3E%3C/svg%3E`;
+        
+        if (url) {
+            preview.innerHTML = `
+                <div class="position-relative">
+                    <img src="${placeholderImage}" alt="Placeholder" 
+                         style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+                    <div class="position-absolute bottom-0 start-0 end-0 bg-black/70 text-white p-2 rounded-b-lg">
+                        <small><i class="fas fa-external-link-alt me-1"></i>${url.substring(0, 40)}${url.length > 40 ? '...' : ''}</small>
+                    </div>
                 </div>
-                <div class="position-absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2 text-center">
-                    <small><i class="fas fa-clock me-1"></i>${file.name} (${Math.round(file.size / 1024)} KB)</small>
+                <div class="form-text mt-2">
+                    <button class="btn btn-sm btn-outline-info me-2" onclick="window.open('${url}', '_blank')">
+                        <i class="fas fa-external-link-alt me-1"></i>Voir l'image
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('${inputId}').value=''; adminManager.updateImagePreview('${inputId}', '${previewId}')">
+                        <i class="fas fa-trash me-1"></i>Effacer
+                    </button>
                 </div>
-            </div>
-        `;
-    };
-    reader.readAsDataURL(file);
-}
-
-clearEditImage(type) {
-    console.log(`🗑️ Effacer image ${type}`);
-    
-    if (type === 'main') {
-        document.getElementById('edit_main_image_url').value = '';
-        document.getElementById('edit_main_image_file').value = '';
-        this.updateEditImagePreview('main');
-    } else if (type === 'thumbnail') {
-        document.getElementById('edit_thumbnail_url').value = '';
-        document.getElementById('edit_thumbnail_file').value = '';
-        this.updateEditImagePreview('thumbnail');
+            `;
+        } else {
+            preview.innerHTML = `
+                <img src="${placeholderImage}" alt="Aucune image" 
+                     style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+                <div class="form-text text-center mt-2 text-gray-500">
+                    <i class="fas fa-info-circle me-1"></i>Ajoutez une URL d'image
+                </div>
+            `;
+        }
     }
-}
 
-// ET REMPLACEZ updateEditImagePreview par cette version corrigée :
-updateEditImagePreview(type) {
-    const inputId = type === 'main' ? 'edit_main_image_url' : 'edit_thumbnail_url';
-    const previewId = type === 'main' ? 'edit_main_image_preview' : 'edit_thumbnail_preview';
-    const fileInputId = type === 'main' ? 'edit_main_image_file' : 'edit_thumbnail_file';
-    
-    const url = document.getElementById(inputId)?.value || '';
-    const preview = document.getElementById(previewId);
-    
+    // Configurer les uploads d'images dans le modal d'édition
+    setupEditImageUploads() {
+        const mainImageInput = document.getElementById('edit_main_image_file');
+        if (mainImageInput) {
+            mainImageInput.addEventListener('change', (e) => {
+                this.handleEditImageUpload(e.target.files[0], 'main');
+            });
+        }
+        
+        const thumbnailInput = document.getElementById('edit_thumbnail_file');
+        if (thumbnailInput) {
+            thumbnailInput.addEventListener('change', (e) => {
+                this.handleEditImageUpload(e.target.files[0], 'thumbnail');
+            });
+        }
+    }
+
+    // Gérer l'upload d'image dans l'édition
+    async handleEditImageUpload(file, type) {
+        if (!file) return;
+        
+        // Afficher un aperçu immédiat
+        this.showEditImagePreview(file, type);
+        
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // Envoi au serveur
+            const response = await fetch(this.API_BASE_URL + 'upload.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Remplir automatiquement le champ URL
+                if (type === 'main') {
+                    document.getElementById('edit_main_image_url').value = data.data.main_image_url;
+                    this.updateEditImagePreview('main');
+                } else if (type === 'thumbnail') {
+                    document.getElementById('edit_thumbnail_url').value = data.data.thumbnail_url || data.data.main_image_url;
+                    this.updateEditImagePreview('thumbnail');
+                }
+                
+                this.showAlert('✅ Image uploadée avec succès !', 'success');
+            } else {
+                this.showAlert('❌ Erreur upload: ' + (data.error || 'Erreur inconnue'), 'error');
+                this.updateEditImagePreview(type);
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            this.showAlert('❌ Erreur de connexion au serveur', 'error');
+            this.updateEditImagePreview(type);
+        }
+    }
+
+    // Afficher l'aperçu d'image pendant l'upload
+    showEditImagePreview(file, type) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const previewId = type === 'main' ? 'edit_main_image_preview' : 'edit_thumbnail_preview';
+            const preview = document.getElementById(previewId);
+            
+            preview.innerHTML = `
+                <div class="position-relative" style="width: 100%; height: 150px; border-radius: 8px; overflow: hidden;">
+                    <img src="${e.target.result}" alt="Aperçu" 
+                         style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="position-absolute top-2 right-2 badge bg-info">
+                        <i class="fas fa-spinner fa-spin me-1"></i>Upload...
+                    </div>
+                    <div class="position-absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2 text-center">
+                        <small><i class="fas fa-clock me-1"></i>${file.name} (${Math.round(file.size / 1024)} KB)</small>
+                    </div>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Effacer une image dans l'édition
+    clearEditImage(type) {
+        if (type === 'main') {
+            document.getElementById('edit_main_image_url').value = '';
+            document.getElementById('edit_main_image_file').value = '';
+            this.updateEditImagePreview('main');
+        } else if (type === 'thumbnail') {
+            document.getElementById('edit_thumbnail_url').value = '';
+            document.getElementById('edit_thumbnail_file').value = '';
+            this.updateEditImagePreview('thumbnail');
+        }
+    }
+
+    // Mettre à jour la prévisualisation d'image dans l'édition
+    updateEditImagePreview(type) {
+        const inputId = type === 'main' ? 'edit_main_image_url' : 'edit_thumbnail_url';
+        const previewId = type === 'main' ? 'edit_main_image_preview' : 'edit_thumbnail_preview';
+        const fileInputId = type === 'main' ? 'edit_main_image_file' : 'edit_thumbnail_file';
+        
+        const url = document.getElementById(inputId)?.value || '';
+        const preview = document.getElementById(previewId);
+        
         if (!preview) {
-            console.error(`❌ Preview ${previewId} non trouvé`);
+            console.error(`Preview ${previewId} non trouvé`);
             return;
         }
-    
-    // Vider complètement le preview
-    preview.innerHTML = '';
-    
-    if (url && url.trim() !== '') {
-        // Créer un conteneur
-        const container = document.createElement('div');
-        container.className = 'position-relative';
-        container.style.cssText = 'width: 100%; height: 150px; border-radius: 8px; overflow: hidden;';
         
-        // Créer l'image
-        const img = document.createElement('img');
-        img.src = url;
-        img.alt = type === 'main' ? 'Image principale' : 'Miniature';
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+        preview.innerHTML = '';
         
-        // Gestion d'erreur discrète
-
-        img.onerror = function() {
-                    // SVG de remplacement
-                    this.src = `data:image/svg+xml,%3Csvg width='200' height='150' viewBox='0 0 200 150' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='200' height='150' rx='10' fill='%231a1a1a'/%3E%3Cpath d='M70 50H50V70H70V50Z' stroke='%23475569' stroke-width='2'/%3E%3Cpath d='M120 50L100 70L140 60L130 65L125 62.5L120 65Z' stroke='%2337A1FF' stroke-width='2'/%3E%3Ccircle cx='60' cy='60' r='5' fill='%2337A1FF'/%3E%3Cpath d='M80 90L100 110M120 90L140 110' stroke='%23475569' stroke-width='2'/%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%2394A3B8' font-size='12'%3EImage non disponible%3C/text%3E%3C/svg%3E`;
-                    this.style.filter = 'grayscale(0.8) opacity(0.7)';
-                    
-                    // Ajouter un badge d'avertissement
-                    const warningBadge = document.createElement('div');
-                    warningBadge.className = 'position-absolute top-2 right-2 badge bg-warning text-dark';
-                    warningBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>404';
-                    warningBadge.style.fontSize = '0.7rem';
-                    warningBadge.style.zIndex = '10';
-                    
-                    container.appendChild(warningBadge);
-                };
-                
-                // Gestion de succès
-                img.onload = function() {
-                    // Ajouter un badge de succès
-                    const successBadge = document.createElement('div');
-                    successBadge.className = 'position-absolute top-2 right-2 badge bg-success';
-                    successBadge.innerHTML = '<i class="fas fa-check me-1"></i>OK';
-                    successBadge.style.fontSize = '0.7rem';
-                    successBadge.style.zIndex = '10';
-                    
-                    container.appendChild(successBadge);
-                };
-                
-        container.appendChild(img);
-        
-        // Ajouter un overlay avec l'info URL
-        const overlay = document.createElement('div');
-        overlay.className = 'position-absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2';
-        overlay.style.fontSize = '0.75rem';
-        
-        const fileName = url.split('/').pop();
-        overlay.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="text-truncate" style="max-width: 70%;">
-                    <i class="fas fa-link me-1"></i>
-                    ${fileName || 'Image'}
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-light me-1" onclick="window.open('${url}', '_blank')" title="Voir l'image">
-                        <i class="fas fa-external-link-alt"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="clearEditImage('${type}')" title="Effacer">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        container.appendChild(overlay);
-        preview.appendChild(container);
-        
-    } else {
-        // Afficher un placeholder invitant à uploader
-        preview.innerHTML = `
-            <div class="text-center py-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-blue-500 transition-colors cursor-pointer"
-                 onclick="document.getElementById('${fileInputId}').click()"
-                 style="height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                <i class="fas fa-cloud-upload-alt fa-3x text-gray-600 mb-3"></i>
-                <p class="text-gray-400 mb-1">Aucune image</p>
-                <small class="text-gray-500">
-                    <i class="fas fa-mouse-pointer me-1"></i>Cliquez pour uploader
-                </small>
-            </div>
-        `;
-    }
-}
-
-async deleteProject(projectId) {
-    console.log("🗑️ Tentative de suppression du projet ID:", projectId);
-    
-    // Demander confirmation
-    if (!confirm("⚠️ Voulez-vous vraiment supprimer ce projet ?\n\nCette action le masquera du portfolio mais le conservera en base de données (soft delete).")) {
-        console.log("❌ Suppression annulée par l'utilisateur");
-        return;
-    }
-    
-    try {
-        // Bouton de suppression - afficher état "en cours"
-        const deleteBtn = event.target.closest('button');
-        const originalHtml = deleteBtn?.innerHTML || '';
-        if (deleteBtn) {
-            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            deleteBtn.disabled = true;
-        }
-        
-        // Appeler l'API de suppression
-        const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=delete&id=${projectId}`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id: projectId })
-        });
-        
-        const data = await response.json();
-        
-        if (deleteBtn) {
-            deleteBtn.innerHTML = originalHtml;
-            deleteBtn.disabled = false;
-        }
-        
-        if (data.success) {
-            console.log("✅ Projet supprimé avec succès");
-            this.showAlert('✅ Projet marqué comme supprimé avec succès', 'success');
+        if (url && url.trim() !== '') {
+            const container = document.createElement('div');
+            container.className = 'position-relative';
+            container.style.cssText = 'width: 100%; height: 150px; border-radius: 8px; overflow: hidden;';
             
-            // Rafraîchir la liste des projets après 1 seconde
-            setTimeout(() => {
-                this.chargerProjets();
-            }, 1000);
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = type === 'main' ? 'Image principale' : 'Miniature';
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+            
+            // Gestion d'erreur si l'image n'est pas accessible
+            img.onerror = function() {
+                this.src = `data:image/svg+xml,%3Csvg width='200' height='150' viewBox='0 0 200 150' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='200' height='150' rx='10' fill='%231a1a1a'/%3E%3Cpath d='M70 50H50V70H70V50Z' stroke='%23475569' stroke-width='2'/%3E%3Cpath d='M120 50L100 70L140 60L130 65L125 62.5L120 65Z' stroke='%2337A1FF' stroke-width='2'/%3E%3Ccircle cx='60' cy='60' r='5' fill='%2337A1FF'/%3E%3Cpath d='M80 90L100 110M120 90L140 110' stroke='%23475569' stroke-width='2'/%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%2394A3B8' font-size='12'%3EImage non disponible%3C/text%3E%3C/svg%3E`;
+                this.style.filter = 'grayscale(0.8) opacity(0.7)';
+                
+                // Ajouter un badge d'avertissement
+                const warningBadge = document.createElement('div');
+                warningBadge.className = 'position-absolute top-2 right-2 badge bg-warning text-dark';
+                warningBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>404';
+                warningBadge.style.fontSize = '0.7rem';
+                warningBadge.style.zIndex = '10';
+                
+                container.appendChild(warningBadge);
+            };
+            
+            // Gestion de succès
+            img.onload = function() {
+                const successBadge = document.createElement('div');
+                successBadge.className = 'position-absolute top-2 right-2 badge bg-success';
+                successBadge.innerHTML = '<i class="fas fa-check me-1"></i>OK';
+                successBadge.style.fontSize = '0.7rem';
+                successBadge.style.zIndex = '10';
+                
+                container.appendChild(successBadge);
+            };
+            
+            container.appendChild(img);
+            
+            // Overlay avec informations
+            const overlay = document.createElement('div');
+            overlay.className = 'position-absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2';
+            overlay.style.fontSize = '0.75rem';
+            
+            const fileName = url.split('/').pop();
+            overlay.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-truncate" style="max-width: 70%;">
+                        <i class="fas fa-link me-1"></i>
+                        ${fileName || 'Image'}
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-light me-1" onclick="window.open('${url}', '_blank')" title="Voir l'image">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearEditImage('${type}')" title="Effacer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(overlay);
+            preview.appendChild(container);
             
         } else {
-            console.error("❌ Erreur lors de la suppression:", data.error);
-            this.showAlert('❌ Erreur: ' + (data.error || 'Impossible de supprimer le projet'), 'error');
+            // Placeholder pour upload d'image
+            preview.innerHTML = `
+                <div class="text-center py-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-blue-500 transition-colors cursor-pointer"
+                     onclick="document.getElementById('${fileInputId}').click()"
+                     style="height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-gray-600 mb-3"></i>
+                    <p class="text-gray-400 mb-1">Aucune image</p>
+                    <small class="text-gray-500">
+                        <i class="fas fa-mouse-pointer me-1"></i>Cliquez pour uploader
+                    </small>
+                </div>
+            `;
         }
-        
-    } catch (error) {
-        console.error("💥 Erreur réseau:", error);
-        
-        // Restaurer le bouton
-        const deleteBtn = event.target.closest('button');
-        if (deleteBtn) {
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.disabled = false;
-        }
-        
-        this.showAlert('❌ Erreur de connexion au serveur', 'error');
     }
-}
 
-async restoreProject(projectId) {
-    if (!confirm("🔄 Voulez-vous restaurer ce projet ?")) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=restore&id=${projectId}`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id: projectId, status: 'draft' })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            this.showAlert('✅ Projet restauré (mis en brouillon)', 'success');
-            setTimeout(() => this.chargerProjets(), 1000);
-        } else {
-            this.showAlert('❌ ' + (data.error || 'Erreur de restauration'), 'error');
-        }
-    } catch (error) {
-        console.error("Erreur:", error);
-        this.showAlert('❌ Erreur serveur', 'error');
-    }
-}
+    // ==============================================
+    // GESTION DE LA SUPPRESSION DES PROJETS
+    // ==============================================
 
-async deletePermanently(projectId) {
-    if (!confirm("☠️ ⚠️ ATTENTION : Suppression DÉFINITIVE !\n\nCe projet sera effacé de la base de données et ne pourra PAS être récupéré.\n\nConfirmez-vous cette action ?")) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=delete_permanent&id=${projectId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            this.showAlert('✅ Projet supprimé définitivement', 'success');
-            setTimeout(() => this.chargerProjets(), 1000);
-        } else {
-            this.showAlert('❌ ' + (data.error || 'Erreur de suppression'), 'error');
+    // Supprimer un projet (soft delete)
+    async deleteProject(projectId) {
+        // Demander confirmation
+        if (!confirm("⚠️ Voulez-vous vraiment supprimer ce projet ?\n\nCette action le masquera du portfolio mais le conservera en base de données (soft delete).")) {
+            return;
         }
-    } catch (error) {
-        console.error("Erreur:", error);
-        this.showAlert('❌ Erreur serveur', 'error');
+        
+        try {
+            // État "chargement" pour le bouton
+            const deleteBtn = event.target.closest('button');
+            const originalHtml = deleteBtn?.innerHTML || '';
+            if (deleteBtn) {
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                deleteBtn.disabled = true;
+            }
+            
+            // Appel API de suppression
+            const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=delete&id=${projectId}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: projectId })
+            });
+            
+            const data = await response.json();
+            
+            if (deleteBtn) {
+                deleteBtn.innerHTML = originalHtml;
+                deleteBtn.disabled = false;
+            }
+            
+            if (data.success) {
+                this.showAlert('✅ Projet marqué comme supprimé avec succès', 'success');
+                
+                // Rafraîchir la liste après 1 seconde
+                setTimeout(() => {
+                    this.chargerProjets();
+                }, 1000);
+                
+            } else {
+                this.showAlert('❌ Erreur: ' + (data.error || 'Impossible de supprimer le projet'), 'error');
+            }
+            
+        } catch (error) {
+            console.error("Erreur suppression:", error);
+            
+            // Restaurer le bouton
+            const deleteBtn = event.target.closest('button');
+            if (deleteBtn) {
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.disabled = false;
+            }
+            
+            this.showAlert('❌ Erreur de connexion au serveur', 'error');
+        }
     }
-}
 
+    // Restaurer un projet supprimé
+    async restoreProject(projectId) {
+        if (!confirm("🔄 Voulez-vous restaurer ce projet ?")) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=restore&id=${projectId}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: projectId, status: 'draft' })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showAlert('✅ Projet restauré (mis en brouillon)', 'success');
+                setTimeout(() => this.chargerProjets(), 1000);
+            } else {
+                this.showAlert('❌ ' + (data.error || 'Erreur de restauration'), 'error');
+            }
+        } catch (error) {
+            console.error("Erreur restauration:", error);
+            this.showAlert('❌ Erreur serveur', 'error');
+        }
+    }
+
+    // Supprimer définitivement un projet
+    async deletePermanently(projectId) {
+        if (!confirm("☠️ ⚠️ ATTENTION : Suppression DÉFINITIVE !\n\nCe projet sera effacé de la base de données et ne pourra PAS être récupéré.\n\nConfirmez-vous cette action ?")) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${this.API_BASE_URL}projetApi.php?action=delete_permanent&id=${projectId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showAlert('✅ Projet supprimé définitivement', 'success');
+                setTimeout(() => this.chargerProjets(), 1000);
+            } else {
+                this.showAlert('❌ ' + (data.error || 'Erreur de suppression'), 'error');
+            }
+        } catch (error) {
+            console.error("Erreur suppression définitive:", error);
+            this.showAlert('❌ Erreur serveur', 'error');
+        }
+    }
 }
 
 // ==============================================
-// FONCTIONS GLOBALES POUR LES BOUTONS
+// FONCTIONS GLOBALES
 // ==============================================
 
-window.addTechnology = function() {
-    console.log("🟡 Bouton addTechnology cliqué");
-    console.log("adminManager existe ?", typeof window.adminManager !== 'undefined');
+// Fonction pour ajouter une technologie dans le modal
+window.addModalTechnology = function() {
+    const input = document.getElementById('modal_technology_input');
+    const value = input.value.trim();
     
-    // Attendre un peu si adminManager n'est pas encore prêt
-    if (!window.adminManager) {
-        console.log("⏳ adminManager pas encore initialisé, attente de 100ms...");
+    if (value) {
+        const container = document.getElementById('modal_technologiesContainer');
+        
+        // Créer un nouveau champ input
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+            <input type="text" class="form-control technology-input" value="${value}" readonly>
+            <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+            <input type="hidden" name="modal_technologies[]" value="${value}">
+        `;
+        container.appendChild(div);
+        
+        // Réinitialiser le champ d'entrée et ajouter un nouveau
+        input.value = '';
+        const newInputDiv = document.createElement('div');
+        newInputDiv.className = 'input-group mb-2';
+        newInputDiv.innerHTML = `
+            <input type="text" class="form-control technology-input" 
+                   placeholder="Ex: React, Node.js..." 
+                   id="modal_technology_input">
+            <button class="btn btn-outline-secondary" type="button" onclick="addModalTechnology()">
+                <i class="fas fa-plus"></i>
+            </button>
+        `;
+        container.appendChild(newInputDiv);
+        
+        // Focus sur le nouveau champ
         setTimeout(() => {
-            if (window.adminManager && window.adminManager.ajouterTechnologie) {
-                window.adminManager.ajouterTechnologie();
-            } else {
-                console.error("❌ adminManager toujours pas disponible après attente");
-                fallbackAddTechnology();
-            }
+            const newInput = newInputDiv.querySelector('input');
+            newInput.focus();
         }, 100);
-        return;
-    }
-    
-    // Si adminManager est prêt
-    if (window.adminManager.ajouterTechnologie) {
-        window.adminManager.ajouterTechnologie();
-    } else {
-        console.error("❌ Méthode ajouterTechnologie non trouvée");
-        fallbackAddTechnology();
     }
 };
 
-window.addFeature = function() {
-    console.log("🟡 Bouton addFeature cliqué");
-    console.log("adminManager existe ?", typeof window.adminManager !== 'undefined');
+// Fonction pour ajouter une fonctionnalité dans le modal
+window.addModalFeature = function() {
+    const input = document.getElementById('modal_feature_input');
+    const value = input.value.trim();
     
-    // Attendre un peu si adminManager n'est pas encore prêt
-    if (!window.adminManager) {
-        console.log("⏳ adminManager pas encore initialisé, attente de 100ms...");
+    if (value) {
+        const container = document.getElementById('modal_featuresContainer');
+        
+        // Créer un nouveau champ input
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+            <input type="text" class="form-control feature-input" value="${value}" readonly>
+            <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+            <input type="hidden" name="modal_features[]" value="${value}">
+        `;
+        container.appendChild(div);
+        
+        // Réinitialiser le champ d'entrée et ajouter un nouveau
+        input.value = '';
+        const newInputDiv = document.createElement('div');
+        newInputDiv.className = 'input-group mb-2';
+        newInputDiv.innerHTML = `
+            <input type="text" class="form-control feature-input" 
+                   placeholder="Ex: Authentification, Dashboard..." 
+                   id="modal_feature_input">
+            <button class="btn btn-outline-secondary" type="button" onclick="addModalFeature()">
+                <i class="fas fa-plus"></i>
+            </button>
+        `;
+        container.appendChild(newInputDiv);
+        
+        // Focus sur le nouveau champ
         setTimeout(() => {
-            if (window.adminManager && window.adminManager.ajouterFonctionnalite) {
-                window.adminManager.ajouterFonctionnalite();
-            } else {
-                console.error("❌ adminManager toujours pas disponible après attente");
-                fallbackAddFeature();
-            }
+            const newInput = newInputDiv.querySelector('input');
+            newInput.focus();
         }, 100);
-        return;
-    }
-    
-    // Si adminManager est prêt
-    if (window.adminManager.ajouterFonctionnalite) {
-        window.adminManager.ajouterFonctionnalite();
-    } else {
-        console.error("❌ Méthode ajouterFonctionnalite non trouvée");
-        fallbackAddFeature();
     }
 };
 
-window.resetForm = function() {
-    console.log("🟡 Bouton resetForm cliqué");
-    
-    if (!window.adminManager) {
-        console.log("⏳ adminManager pas encore initialisé, attente de 100ms...");
-        setTimeout(() => {
-            if (window.adminManager && window.adminManager.reinitialiserFormulaire) {
-                window.adminManager.reinitialiserFormulaire();
-            } else {
-                console.error("❌ adminManager toujours pas disponible après attente");
-                fallbackResetForm();
-            }
-        }, 100);
-        return;
-    }
-    
-    if (window.adminManager.reinitialiserFormulaire) {
-        window.adminManager.reinitialiserFormulaire();
-    } else {
-        console.error("❌ Méthode reinitialiserFormulaire non trouvée");
-        fallbackResetForm();
-    }
-};
-
-// Fonctions globales pour les boutons
-window.addEditTechnology = function() {
-    if (window.adminManager) {
-        window.adminManager.addEditTechnologyField();
-    }
-};
-
-window.addEditFeature = function() {
-    if (window.adminManager) {
-        window.adminManager.addEditFeatureField();
-    }
-};
-
+// Gérer la touche Entrée dans les inputs
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('keypress', function(e) {
+        if (e.target.id === 'modal_technology_input' && e.key === 'Enter') {
+            e.preventDefault();
+            addModalTechnology();
+        }
+        if (e.target.id === 'modal_feature_input' && e.key === 'Enter') {
+            e.preventDefault();
+            addModalFeature();
+        }
+    });
+});
 
 // Fonctions globales pour le modal d'édition
-window.clearEditImage = function(type) {
-    if (window.adminManager && window.adminManager.clearEditImage) {
-        window.adminManager.clearEditImage(type);
-    }
-};
-
 window.addEditTechnology = function() {
     if (window.adminManager && window.adminManager.addEditTechnologyField) {
         window.adminManager.addEditTechnologyField();
@@ -1343,6 +1451,12 @@ window.addEditTechnology = function() {
 window.addEditFeature = function() {
     if (window.adminManager && window.adminManager.addEditFeatureField) {
         window.adminManager.addEditFeatureField();
+    }
+};
+
+window.clearEditImage = function(type) {
+    if (window.adminManager && window.adminManager.clearEditImage) {
+        window.adminManager.clearEditImage(type);
     }
 };
 
@@ -1366,112 +1480,19 @@ window.clearAllFeatures = function() {
     }
 };
 
-// Gestion du read-only des URLs
-document.addEventListener('DOMContentLoaded', function() {
-    const urlInputs = ['edit_main_image_url', 'edit_thumbnail_url'];
-    
-    urlInputs.forEach(inputId => {
-        const input = document.getElementById(inputId);
-        if (input) {
-            // Réactiver le read-only si on sort du champ
-            input.addEventListener('blur', function() {
-                if (!this.value.trim()) {
-                    this.setAttribute('readonly', true);
-                }
-            });
-        }
-    });
-});
-
-// Fonctions de fallback
-function fallbackAddTechnology() {
-    console.log("🔄 Utilisation de fallbackAddTechnology");
-    const container = document.getElementById("technologiesContainer");
-    if (!container) {
-        console.error("❌ Container technologies non trouvé");
-        return;
-    }
-    
-    const div = document.createElement("div");
-    div.className = "input-group mb-2";
-    div.innerHTML = `
-        <input type="text" class="form-control technology-input" placeholder="Nouvelle technologie...">
-        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    container.appendChild(div);
-    
-    const nouveauInput = div.querySelector("input");
-    nouveauInput.focus();
-}
-
-function fallbackAddFeature() {
-    console.log("🔄 Utilisation de fallbackAddFeature");
-    const container = document.getElementById("featuresContainer");
-    if (!container) {
-        console.error("❌ Container features non trouvé");
-        return;
-    }
-    
-    const div = document.createElement("div");
-    div.className = "input-group mb-2";
-    div.innerHTML = `
-        <input type="text" class="form-control feature-input" placeholder="Nouvelle fonctionnalité...">
-        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    container.appendChild(div);
-    
-    const nouveauInput = div.querySelector("input");
-    nouveauInput.focus();
-}
-
-function fallbackResetForm() {
-    console.log("🔄 Utilisation de fallbackResetForm");
-    const form = document.getElementById("projectForm");
-    if (form) form.reset();
-    
-    const techContainer = document.getElementById("technologiesContainer");
-    if (techContainer) {
-        techContainer.innerHTML = `
-            <div class="input-group mb-2">
-                <input type="text" class="form-control technology-input" placeholder="Ex: React, Node.js...">
-                <button class="btn btn-outline-secondary" type="button" onclick="addTechnology()">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        `;
-    }
-    
-    const featuresContainer = document.getElementById("featuresContainer");
-    if (featuresContainer) {
-        featuresContainer.innerHTML = `
-            <div class="input-group mb-2">
-                <input type="text" class="form-control feature-input" placeholder="Ex: Authentification, Dashboard...">
-                <button class="btn btn-outline-secondary" type="button" onclick="addFeature()">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        `;
-    }
-}
-
 // ==============================================
-// INITIALISATION
+// INITIALISATION PRINCIPALE
 // ==============================================
 
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("📄 Page admin chargée !");
-    
     try {
+        // Initialisation du gestionnaire d'administration
         window.adminManager = new AdminManager();
-        console.log("✅ AdminManager initialisé");
         
     } catch (erreur) {
-        console.error("💥 Erreur initialisation AdminManager :", erreur);
+        console.error("Erreur initialisation AdminManager :", erreur);
         
+        // Affichage d'un message d'erreur en cas d'échec
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-danger';
         alertDiv.innerHTML = `

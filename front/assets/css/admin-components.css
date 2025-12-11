@@ -1,0 +1,734 @@
+/* ============================================
+   ADMIN COMPONENTS CSS - Composants réutilisables
+   Compatible avec votre thème glacial existant
+============================================= */
+
+/* ===== CARTES STATISTIQUES GLACIALES ===== */
+.glacial-stat-card {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(125, 211, 252, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.glacial-stat-card:hover {
+    border-color: rgba(14, 165, 233, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -12px rgba(14, 165, 233, 0.15);
+}
+
+.glacial-stat-card .stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-cyan) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.glacial-stat-card .stat-content {
+    flex: 1;
+}
+
+.glacial-stat-card .stat-content h4 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--primary-cyan-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+    line-height: 1;
+}
+
+.glacial-stat-card .stat-content p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* ===== BOUTONS GLACIAUX ===== */
+.btn-ice {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-cyan) 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.3);
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-ice:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 8px 30px rgba(14, 165, 233, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.btn-ice:active {
+    transform: translateY(0);
+}
+
+.btn-ice:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-outline-ice {
+    background: transparent;
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    color: var(--glacier-blue);
+    padding: 12px 24px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-outline-ice:hover {
+    background: rgba(125, 211, 252, 0.1);
+    border-color: var(--primary-blue);
+    color: var(--primary-blue-light);
+}
+
+.btn-ice-sm {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+}
+
+.btn-ice-xs {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+}
+
+/* ===== GROUPES DE BOUTONS ===== */
+.btn-group-ice {
+    display: inline-flex;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(125, 211, 252, 0.3);
+}
+
+.btn-group-ice .btn {
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid rgba(125, 211, 252, 0.3);
+}
+
+.btn-group-ice .btn:last-child {
+    border-right: none;
+}
+
+/* ===== INPUTS ET FORMULAIRES GLACIAUX ===== */
+.glacial-input {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    width: 100%;
+}
+
+.glacial-input:focus {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: var(--primary-blue);
+    box-shadow: 
+        0 0 0 3px rgba(14, 165, 233, 0.1),
+        0 0 20px rgba(14, 165, 233, 0.2);
+    color: var(--text-primary);
+    outline: none;
+}
+
+.glacial-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.glacial-input-group {
+    display: flex;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.glacial-input-group .glacial-input {
+    border: none;
+    border-radius: 0;
+    flex: 1;
+}
+
+.glacial-input-group .btn {
+    border-radius: 0;
+    background: var(--primary-dark-lighter);
+    color: var(--text-secondary);
+    border: none;
+    padding: 12px 20px;
+    transition: all 0.3s ease;
+}
+
+.glacial-input-group .btn:hover {
+    background: var(--primary-blue);
+    color: white;
+}
+
+/* ===== SELECTS GLACIAUX ===== */
+.glacial-select {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%237dd3fc' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.glacial-select:focus {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: var(--primary-blue);
+    box-shadow: 
+        0 0 0 3px rgba(14, 165, 233, 0.1),
+        0 0 20px rgba(14, 165, 233, 0.2);
+    outline: none;
+}
+
+.glacial-select option {
+    background: var(--primary-dark);
+    color: var(--text-primary);
+}
+
+/* ===== CHECKBOXES GLACIAUX ===== */
+.glacial-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    gap: 10px;
+}
+
+.glacial-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.glacial-checkbox .checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.glacial-checkbox .checkmark::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-cyan) 100%);
+    border-radius: 4px;
+    transform: scale(0);
+    transition: transform 0.3s ease;
+}
+
+.glacial-checkbox input[type="checkbox"]:checked ~ .checkmark {
+    border-color: var(--primary-blue);
+}
+
+.glacial-checkbox input[type="checkbox"]:checked ~ .checkmark::after {
+    transform: scale(1);
+}
+
+.glacial-checkbox .label {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ===== BADGES GLACIAUX ===== */
+.glacial-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid transparent;
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.badge-info {
+    background: rgba(14, 165, 233, 0.2);
+    color: var(--primary-blue);
+    border-color: rgba(14, 165, 233, 0.3);
+}
+
+.badge-blue {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.badge-cyan {
+    background: rgba(6, 182, 212, 0.2);
+    color: var(--primary-cyan);
+    border-color: rgba(6, 182, 212, 0.3);
+}
+
+.badge-purple {
+    background: rgba(139, 92, 246, 0.2);
+    color: #8b5cf6;
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.badge-pink {
+    background: rgba(236, 72, 153, 0.2);
+    color: #ec4899;
+    border-color: rgba(236, 72, 153, 0.3);
+}
+
+/* ===== CHIPS GLACIAUX ===== */
+.chip-ice {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(125, 211, 252, 0.1);
+    color: var(--glacier-blue);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    margin-right: 6px;
+    margin-bottom: 4px;
+    border: 1px solid rgba(125, 211, 252, 0.2);
+    gap: 4px;
+}
+
+.chip-ice .chip-remove {
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.chip-ice .chip-remove:hover {
+    opacity: 1;
+}
+
+.chip-more {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(100, 116, 139, 0.1);
+    color: var(--text-muted);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+}
+
+/* ===== MODAUX GLACIAUX ===== */
+.glacial-modal .modal-content {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 
+        0 25px 50px -12px var(--shadow-color),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.glacial-modal .modal-header {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 30px;
+}
+
+.glacial-modal .modal-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--primary-cyan-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.3px;
+}
+
+.glacial-modal .btn-close-ice {
+    filter: invert(1) brightness(2);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.glacial-modal .btn-close-ice:hover {
+    opacity: 1;
+    transform: rotate(90deg);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.glacial-modal .modal-body {
+    padding: 30px;
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.glacial-modal .modal-footer {
+    background: var(--primary-dark-lighter);
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 20px 20px;
+    padding: 20px 30px;
+}
+
+/* ===== BOÎTES DE RECHERCHE ===== */
+.search-box {
+    position: relative;
+    width: 100%;
+}
+
+.search-box .search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--glacier-blue);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.search-box .search-input {
+    width: 100%;
+    padding: 12px 15px 12px 45px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    border-radius: 12px;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.search-box .search-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.search-box .search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 4px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.search-box .search-clear:hover {
+    color: var(--text-primary);
+}
+
+/* ===== SÉPARATEURS GLACIAUX ===== */
+.glacial-divider {
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(125, 211, 252, 0.3) 50%, 
+        transparent 100%);
+    margin: 30px 0;
+    border: none;
+}
+
+.glacial-divider-vertical {
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        rgba(125, 211, 252, 0.3) 50%, 
+        transparent 100%);
+    margin: 0 20px;
+    border: none;
+}
+
+/* ===== ALERTES GLACIALES ===== */
+.alert-ice {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(125, 211, 252, 0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    color: var(--text-primary);
+    backdrop-filter: blur(10px);
+}
+
+.alert-ice-success {
+    border-left: 4px solid #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.alert-ice-info {
+    border-left: 4px solid var(--primary-blue);
+    background: rgba(14, 165, 233, 0.1);
+}
+
+.alert-ice-warning {
+    border-left: 4px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.alert-ice-danger {
+    border-left: 4px solid #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ===== ÉTATS VIDES ===== */
+.glacial-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 16px;
+    border: 2px dashed rgba(125, 211, 252, 0.2);
+    margin: 20px 0;
+}
+
+.glacial-empty-state .empty-icon {
+    font-size: 4rem;
+    color: rgba(125, 211, 252, 0.2);
+    margin-bottom: 20px;
+}
+
+.glacial-empty-state h4 {
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.glacial-empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+/* ===== CHARGEMENT GLACIAL ===== */
+.glacial-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 16px;
+    margin: 20px 0;
+}
+
+.glacial-loading .loading-spinner {
+    margin-bottom: 20px;
+}
+
+.spinner-ice {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(125, 211, 252, 0.1);
+    border-top-color: var(--primary-blue-light);
+    border-radius: 50%;
+    animation: spin-ice 1s linear infinite;
+}
+
+.spinner-ice-sm {
+    width: 30px;
+    height: 30px;
+    border-width: 2px;
+}
+
+@keyframes spin-ice {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== CARTES DE CONTENU ===== */
+.glacial-card {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(125, 211, 252, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.glacial-card:hover {
+    border-color: rgba(14, 165, 233, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -12px rgba(14, 165, 233, 0.15);
+}
+
+.glacial-card-header {
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.glacial-card-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.glacial-card-body {
+    color: var(--text-secondary);
+}
+
+/* ===== OMBRES GLACIALES ===== */
+.shadow-ice {
+    box-shadow: 
+        0 4px 6px -1px rgba(15, 23, 42, 0.1),
+        0 2px 4px -1px rgba(15, 23, 42, 0.06),
+        0 0 0 1px rgba(125, 211, 252, 0.05);
+}
+
+.shadow-ice-lg {
+    box-shadow: 
+        0 10px 15px -3px rgba(15, 23, 42, 0.1),
+        0 4px 6px -2px rgba(15, 23, 42, 0.05),
+        0 0 0 1px rgba(125, 211, 252, 0.1);
+}
+
+.shadow-ice-xl {
+    box-shadow: 
+        0 20px 25px -5px rgba(15, 23, 42, 0.1),
+        0 10px 10px -5px rgba(15, 23, 42, 0.04),
+        0 0 0 1px rgba(125, 211, 252, 0.15);
+}
+
+/* ===== ANIMATIONS GLACIALES ===== */
+@keyframes fade-in-ice {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slide-in-ice {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse-ice {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in-ice 0.4s ease-out;
+}
+
+.animate-slide-in {
+    animation: slide-in-ice 0.4s ease-out;
+}
+
+.animate-pulse-ice {
+    animation: pulse-ice 2s infinite;
+}
+
+/* ===== UTILITAIRES RESPONSIVES ===== */
+@media (max-width: 768px) {
+    .glacial-stat-card {
+        padding: 16px;
+        gap: 12px;
+    }
+    
+    .glacial-stat-card .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+    
+    .glacial-stat-card .stat-content h4 {
+        font-size: 1.5rem;
+    }
+    
+    .glacial-modal .modal-body,
+    .glacial-modal .modal-header,
+    .glacial-modal .modal-footer {
+        padding: 15px 20px;
+    }
+    
+    .btn-ice,
+    .btn-outline-ice {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+}
