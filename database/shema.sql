@@ -51,6 +51,28 @@ CREATE TABLE projects (
 );
 
 -- ------------------------------------------------------------
+-- TABLE EXPERIENCES
+-- ------------------------------------------------------------
+CREATE TABLE experiences (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    job_title VARCHAR(200) NOT NULL,
+    company VARCHAR(200) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    current_job TINYINT(1) DEFAULT 0,
+    location VARCHAR(200),
+    description TEXT NOT NULL,
+    achievements TEXT,
+    responsibilities JSON DEFAULT (JSON_ARRAY()),
+    technologies JSON DEFAULT (JSON_ARRAY()),
+    display_order INT DEFAULT 0,
+    featured TINYINT(1) DEFAULT 0,
+    display_in_portfolio TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+                 ON UPDATE CURRENT_TIMESTAMP
+);
+-- ------------------------------------------------------------
 -- UTILISATEUR ADMIN PAR DÉFAUT
 -- ------------------------------------------------------------
 INSERT INTO users (username, email, password_hash, role)
@@ -73,6 +95,17 @@ CREATE INDEX idx_projects_slug ON projects(slug);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 
+
+-- ------------------------------------------------------------
+-- INDEX POUR EXPERIENCES
+-- ------------------------------------------------------------
+CREATE INDEX idx_experiences_company ON experiences(company);
+CREATE INDEX idx_experiences_dates ON experiences(start_date, end_date);
+CREATE INDEX idx_experiences_featured ON experiences(featured);
+CREATE INDEX idx_experiences_display_order ON experiences(display_order);
+CREATE INDEX idx_experiences_current_job ON experiences(current_job);
+CREATE INDEX idx_experiences_display_in_portfolio ON experiences(display_in_portfolio);
+
 -- ------------------------------------------------------------
 -- TRIGGER POUR METTRE À JOUR updated_at
 -- ------------------------------------------------------------
@@ -80,6 +113,20 @@ DELIMITER $$
 
 CREATE TRIGGER update_projects_timestamp 
 BEFORE UPDATE ON projects
+FOR EACH ROW
+BEGIN
+    SET NEW.updated_at = CURRENT_TIMESTAMP;
+END $$
+
+DELIMITER ;
+
+-- ------------------------------------------------------------
+-- TRIGGER POUR EXPERIENCES
+-- ------------------------------------------------------------
+DELIMITER $$
+
+CREATE TRIGGER update_experiences_timestamp 
+BEFORE UPDATE ON experiences
 FOR EACH ROW
 BEGIN
     SET NEW.updated_at = CURRENT_TIMESTAMP;
