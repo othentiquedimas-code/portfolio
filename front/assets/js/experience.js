@@ -1,3 +1,7 @@
+/**
+ * EXPERIENCE MANAGER - Version corrigée avec authentification
+ */
+
 class ExperienceManager {
     constructor() {
         this.API_BASE_URL = window.location.origin + '/portfoliodim/back/api/';
@@ -36,6 +40,11 @@ class ExperienceManager {
             const response = await fetch(`${this.API_BASE_URL}auth.php?action=check`, {
                 credentials: 'include'
             });
+            
+            if (!response.ok) {
+                return false;
+            }
+            
             const data = await response.json();
             return data.authenticated === true;
         } catch (error) {
@@ -62,21 +71,25 @@ class ExperienceManager {
                 credentials: 'include'
             });
             
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            
             const data = await response.json();
             
             if (data.success) {
                 this.experiences = data.experiences || [];
                 this.currentPage = page;
-                this.totalPages = data.total_pages || 1;
+                this.totalPages = data.pagination?.total_pages || 1;
                 this.displayExperiences();
                 this.updatePagination();
                 this.updateCount();
             } else {
-                this.showError(data.error || 'Erreur lors du chargement');
+                throw new Error(data.error || 'Erreur lors du chargement');
             }
         } catch (error) {
             console.error('Erreur chargement expériences:', error);
-            this.showError('Erreur de connexion au serveur');
+            this.showError(error.message);
         } finally {
             this.showLoading(false);
         }
@@ -84,6 +97,8 @@ class ExperienceManager {
     
     displayExperiences() {
         const tbody = document.getElementById('experiencesList');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
         
         if (this.experiences.length === 0) {
@@ -130,14 +145,19 @@ class ExperienceManager {
             : exp.description;
         
         // Badge de statut
-        const statusBadge = exp.current_job 
+        const statusBadge = exp.current_job == 1
             ? '<span class="badge bg-success"><i class="fas fa-play-circle me-1"></i>En cours</span>'
             : '<span class="badge bg-secondary">Terminé</span>';
         
         // Badge mis en avant
-        const featuredBadge = exp.featured 
+        const featuredBadge = exp.featured == 1
             ? '<span class="badge bg-warning text-dark ms-1"><i class="fas fa-star"></i></span>'
             : '';
+        
+        // Badge visibilité
+        const visibilityIcon = exp.display_in_portfolio == 1 
+            ? '<i class="fas fa-eye text-success me-1"></i>' 
+            : '<i class="fas fa-eye-slash text-danger me-1"></i>';
         
         tr.innerHTML = `
             <td>
@@ -171,7 +191,7 @@ class ExperienceManager {
                 <div class="timeline-dates">
                     <div class="text-primary">${startDate}</div>
                     <div class="text-muted">→</div>
-                    <div class="${exp.current_job ? 'text-success' : 'text-muted'}">${endDate}</div>
+                    <div class="${exp.current_job == 1 ? 'text-success' : 'text-muted'}">${endDate}</div>
                 </div>
             </td>
             <td>
@@ -197,7 +217,7 @@ class ExperienceManager {
                 ${featuredBadge}
                 <br>
                 <small class="text-muted mt-1 d-block">
-                    <i class="fas fa-sort-numeric-up me-1"></i>Ordre: ${exp.display_order}
+                    ${visibilityIcon}Ordre: ${exp.display_order || 0}
                 </small>
             </td>
             <td class="text-end">
@@ -222,14 +242,14 @@ class ExperienceManager {
                                 <a class="dropdown-item" href="#" 
                                    onclick="experienceManager.toggleFeatured(${exp.id})">
                                     <i class="fas fa-star me-2"></i>
-                                    ${exp.featured ? 'Retirer mise en avant' : 'Mettre en avant'}
+                                    ${exp.featured == 1 ? 'Retirer mise en avant' : 'Mettre en avant'}
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="#" 
                                    onclick="experienceManager.toggleVisibility(${exp.id})">
-                                    <i class="fas fa-eye${exp.display_in_portfolio ? '' : '-slash'} me-2"></i>
-                                    ${exp.display_in_portfolio ? 'Masquer' : 'Afficher'}
+                                    <i class="fas fa-eye${exp.display_in_portfolio == 1 ? '' : '-slash'} me-2"></i>
+                                    ${exp.display_in_portfolio == 1 ? 'Masquer' : 'Afficher'}
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
@@ -237,12 +257,6 @@ class ExperienceManager {
                                 <a class="dropdown-item" href="#" 
                                    onclick="experienceManager.duplicateExperience(${exp.id})">
                                     <i class="fas fa-copy me-2"></i>Dupliquer
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item text-info" href="#" 
-                                   onclick="experienceManager.viewInPortfolio(${exp.id})">
-                                    <i class="fas fa-external-link-alt me-2"></i>Voir dans portfolio
                                 </a>
                             </li>
                         </ul>
@@ -256,6 +270,8 @@ class ExperienceManager {
     
     updatePagination() {
         const pagination = document.getElementById('experiencePagination');
+        if (!pagination) return;
+        
         pagination.innerHTML = '';
         
         // Bouton précédent
@@ -299,8 +315,9 @@ class ExperienceManager {
     
     updateCount() {
         const countElement = document.getElementById('experienceCount');
-        const total = this.experiences.length;
-        countElement.textContent = total;
+        if (countElement) {
+            countElement.textContent = this.experiences.length;
+        }
     }
     
     showLoading(show) {
@@ -347,20 +364,6 @@ class ExperienceManager {
             });
         }
         
-        // Tri des colonnes
-        document.querySelectorAll('.sortable').forEach(icon => {
-            icon.addEventListener('click', (e) => {
-                const field = e.target.dataset.sort;
-                if (this.sortField === field) {
-                    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-                } else {
-                    this.sortField = field;
-                    this.sortOrder = 'desc';
-                }
-                this.loadExperiences(1);
-            });
-        });
-        
         // Sélection multiple
         const selectAll = document.getElementById('selectAllExperiences');
         if (selectAll) {
@@ -401,6 +404,10 @@ class ExperienceManager {
             const response = await fetch(`${this.API_BASE_URL}experienceApi.php?action=get&id=${id}`, {
                 credentials: 'include'
             });
+            
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
             
             const data = await response.json();
             
@@ -540,6 +547,8 @@ class ExperienceManager {
             // Déterminer l'action (création ou mise à jour)
             const experienceId = document.getElementById('experience_id').value;
             const action = experienceId ? 'update' : 'create';
+            const url = `${this.API_BASE_URL}experienceApi.php?action=${action}` + 
+                       (experienceId ? `&id=${experienceId}` : '');
             
             // État de chargement
             const saveBtn = document.querySelector('#experienceModal .btn-ice');
@@ -548,7 +557,7 @@ class ExperienceManager {
             saveBtn.disabled = true;
             
             // Envoi à l'API
-            const response = await fetch(`${this.API_BASE_URL}experienceApi.php?action=${action}`, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -556,6 +565,10 @@ class ExperienceManager {
                 credentials: 'include',
                 body: JSON.stringify(formData)
             });
+            
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
             
             const data = await response.json();
             
@@ -684,6 +697,10 @@ class ExperienceManager {
                 credentials: 'include'
             });
             
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            
             const data = await response.json();
             
             if (data.success) {
@@ -706,57 +723,55 @@ class ExperienceManager {
     
     async toggleFeatured(id) {
         try {
-            const exp = this.experiences.find(e => e.id == id);
-            if (!exp) return;
-            
             const response = await fetch(`${this.API_BASE_URL}experienceApi.php?action=toggle_featured`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 credentials: 'include',
-                body: JSON.stringify({
-                    id: id,
-                    featured: exp.featured ? 0 : 1
-                })
+                body: JSON.stringify({ id: id })
             });
+            
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
             
             const data = await response.json();
             
             if (data.success) {
-                this.showSuccess(exp.featured ? '✅ Retiré des favoris' : '⭐ Mis en avant');
+                this.showSuccess('⭐ Statut de mise en avant modifié');
                 await this.loadExperiences(this.currentPage);
             }
         } catch (error) {
             console.error('Erreur toggle featured:', error);
+            this.showError('Erreur lors de la modification');
         }
     }
     
     async toggleVisibility(id) {
         try {
-            const exp = this.experiences.find(e => e.id == id);
-            if (!exp) return;
-            
             const response = await fetch(`${this.API_BASE_URL}experienceApi.php?action=toggle_visibility`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 credentials: 'include',
-                body: JSON.stringify({
-                    id: id,
-                    display_in_portfolio: exp.display_in_portfolio ? 0 : 1
-                })
+                body: JSON.stringify({ id: id })
             });
+            
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
             
             const data = await response.json();
             
             if (data.success) {
-                this.showSuccess(exp.display_in_portfolio ? '👁️‍🗨️ Masqué du portfolio' : '👁️ Affiché dans le portfolio');
+                this.showSuccess('👁️ Visibilité modifiée');
                 await this.loadExperiences(this.currentPage);
             }
         } catch (error) {
             console.error('Erreur toggle visibility:', error);
+            this.showError('Erreur lors de la modification');
         }
     }
     
@@ -767,6 +782,10 @@ class ExperienceManager {
                 credentials: 'include'
             });
             
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            
             const data = await response.json();
             
             if (data.success) {
@@ -775,13 +794,8 @@ class ExperienceManager {
             }
         } catch (error) {
             console.error('Erreur duplication:', error);
+            this.showError('Erreur lors de la duplication');
         }
-    }
-    
-    viewInPortfolio(id) {
-        // Ouvre le portfolio dans un nouvel onglet avec ancre vers l'expérience
-        const portfolioUrl = window.location.origin + '/portfoliodim/index.html#experience';
-        window.open(portfolioUrl, '_blank');
     }
     
     async refresh() {
@@ -899,64 +913,4 @@ document.addEventListener('keypress', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialiser le gestionnaire d'expériences
     new ExperienceManager();
-    
-    // Configurer le bouton d'export
-    const exportBtn = document.querySelector('[onclick*="exportExperiences"]');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
-            exportModal.show();
-        });
-    }
 });
-
-// Fonction d'export
-window.exportExperiences = function(format) {
-    const experienceManager = window.experienceManager;
-    if (!experienceManager || !experienceManager.experiences) return;
-    
-    let content = '';
-    let filename = `experiences_portfolio_${new Date().toISOString().split('T')[0]}`;
-    
-    if (format === 'json') {
-        content = JSON.stringify(experienceManager.experiences, null, 2);
-        filename += '.json';
-    } else if (format === 'csv') {
-        // Créer le CSV
-        const headers = ['Poste', 'Entreprise', 'Date début', 'Date fin', 'Lieu', 'Description'];
-        content = headers.join(',') + '\n';
-        
-        experienceManager.experiences.forEach(exp => {
-            const row = [
-                `"${exp.job_title.replace(/"/g, '""')}"`,
-                `"${exp.company.replace(/"/g, '""')}"`,
-                exp.start_date,
-                exp.end_date || 'Présent',
-                `"${(exp.location || '').replace(/"/g, '""')}"`,
-                `"${exp.description.replace(/"/g, '""')}"`
-            ];
-            content += row.join(',') + '\n';
-        });
-        
-        filename += '.csv';
-    }
-    
-    // Télécharger le fichier
-    const blob = new Blob([content], { type: format === 'json' ? 'application/json' : 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // Fermer le modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
-    modal.hide();
-    
-    // Afficher une notification
-    experienceManager.showSuccess(`📥 Export ${format.toUpperCase()} téléchargé`);
-};
