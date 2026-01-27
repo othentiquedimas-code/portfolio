@@ -160,38 +160,29 @@ class ExperienceManager {
             : '<i class="fas fa-eye-slash text-danger me-1"></i>';
         
         tr.innerHTML = `
-            <td>
-                <div class="form-check">
-                    <input class="form-check-input experience-checkbox" 
-                           type="checkbox" value="${exp.id}">
-                </div>
-            </td>
+          
             <td>
                 <div class="d-flex align-items-start">
                     <div class="experience-avatar me-3">
-                        <div class="avatar-placeholder bg-ice text-white rounded-circle d-flex align-items-center justify-content-center"
+                        <div class="avatar-placeholder bg-ice text-primary rounded-circle d-flex align-items-center justify-content-center"
                              style="width: 40px; height: 40px;">
                             <i class="fas fa-briefcase"></i>
                         </div>
                     </div>
                     <div>
                         <h6 class="mb-1">${this.escapeHtml(exp.job_title)}</h6>
-                        <p class="text-muted mb-0">
+                        <p class="text-primary mb-0">
                             <i class="fas fa-building me-1"></i>${this.escapeHtml(exp.company)}
                         </p>
-                        ${exp.location ? `
-                            <small class="text-muted">
-                                <i class="fas fa-map-marker-alt me-1"></i>${this.escapeHtml(exp.location)}
-                            </small>
-                        ` : ''}
+                       
                     </div>
                 </div>
             </td>
             <td>
                 <div class="timeline-dates">
                     <div class="text-primary">${startDate}</div>
-                    <div class="text-muted">→</div>
-                    <div class="${exp.current_job == 1 ? 'text-success' : 'text-muted'}">${endDate}</div>
+                    <div class="text-primary">→</div>
+                    <div class="${exp.current_job == 1 ? 'text-success' : 'text-primary'}">${endDate}</div>
                 </div>
             </td>
             <td>
@@ -199,26 +190,12 @@ class ExperienceManager {
                    title="${this.escapeHtml(exp.description)}">
                     ${this.escapeHtml(shortDescription)}
                 </p>
-                <div class="technologies">
-                    ${exp.technologies && exp.technologies.length > 0 
-                        ? exp.technologies.slice(0, 3).map(tech => 
-                            `<span class="badge bg-info-subtle text-info me-1 mb-1">${this.escapeHtml(tech)}</span>`
-                          ).join('')
-                        : ''
-                    }
-                    ${exp.technologies && exp.technologies.length > 3 
-                        ? `<span class="badge bg-secondary">+${exp.technologies.length - 3}</span>`
-                        : ''
-                    }
-                </div>
+            
             </td>
             <td>
                 ${statusBadge}
                 ${featuredBadge}
-                <br>
-                <small class="text-muted mt-1 d-block">
-                    ${visibilityIcon}Ordre: ${exp.display_order || 0}
-                </small>
+           
             </td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm" role="group">

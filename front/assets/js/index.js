@@ -32,9 +32,11 @@ class PortfolioManager {
         this.setupContactForm();
         this.animateStats();
         
-        // Chargement des projets depuis l'API
-        await this.loadProjects();
-        
+        // Charger les projets ET les expériences
+        await Promise.all([
+        this.loadProjects(),
+        this.loadExperiences()  
+        ]);
         // Animation des cartes de projet après leur chargement
         this.animateProjectCards();
     }
@@ -410,6 +412,84 @@ class PortfolioManager {
      */
     async refreshProjects() {
         await this.loadProjects();
+    }
+
+
+        /**
+     * Charge les expériences depuis l'API
+     */
+    async loadExperiences() {
+        try {
+            const response = await fetch(this.constructor.API_BASE_URL + 'experienceApi.php?action=portfolio');
+            
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.experiences && data.experiences.length > 0) {
+                this.displayExperiences(data.experiences);
+            } else {
+                // Garder le contenu statique si pas d'expériences
+                console.log('Aucune expérience à afficher');
+            }
+        } catch (error) {
+            console.error('Erreur chargement expériences:', error);
+        }
+    }
+
+    /**
+     * Affiche les expériences dans la timeline
+     */
+    displayExperiences(experiences) {
+        const timeline = document.querySelector('.timeline');
+        if (!timeline) return;
+        
+        // Vider le contenu statique existant
+        timeline.innerHTML = '';
+        
+        // Trier par date de début (plus récent d'abord)
+        experiences.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+        
+        // Créer les éléments d'expérience
+        experiences.forEach(exp => {
+            const experienceItem = this.createExperienceItem(exp);
+            timeline.appendChild(experienceItem);
+        });
+    }
+
+    /**
+     * Crée un élément d'expérience pour la timeline
+     */
+    createExperienceItem(experience) {
+        const div = document.createElement('div');
+        div.className = 'timeline-item';
+        
+        // Formater la période
+        const startYear = new Date(experience.start_date).getFullYear();
+        let period = startYear + ' - ';
+        
+        if (experience.current_job == 1) {
+            period += 'Présent';
+        } else if (experience.end_date) {
+            const endYear = new Date(experience.end_date).getFullYear();
+            period += endYear;
+        } else {
+            period += 'Présent';
+        }
+        
+        // Nettoyer la description (remplacer les sauts de ligne)
+        const description = experience.description.replace(/\n/g, '<br>');
+        
+        div.innerHTML = `
+            <span class="timeline-date">${period}</span>
+            <h4>${experience.job_title} • ${experience.company}</h4>
+            ${experience.location ? `<p class="text-light mb-2"><i class="fas fa-map-marker-alt me-1"></i>${experience.location}</p>` : ''}
+            <p class="text-light mt-2">${description}</p>
+        `;
+        
+        return div;
     }
 }
 
