@@ -72,6 +72,39 @@ CREATE TABLE experiences (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
                  ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- ------------------------------------------------------------
+-- TABLE MESSAGES (Version simplifiée pour commencer)
+-- ------------------------------------------------------------
+CREATE TABLE messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    
+    -- Informations de contact (correspondent à ton formulaire)
+    nom VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    sujet VARCHAR(200),
+    message TEXT NOT NULL,
+    
+    -- Gestion du statut
+    lu TINYINT(1) DEFAULT 0,      -- 0 = non lu, 1 = lu
+    archive TINYINT(1) DEFAULT 0, -- 0 = non archivé, 1 = archivé
+    
+    -- Suivi de réponse
+    reponse TEXT,                 -- Texte de la réponse admin
+    date_reponse TIMESTAMP NULL,  -- Date de la réponse
+    repondu_par INT NULL,         -- ID de l'admin qui a répondu
+    
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+                 ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Clé étrangère
+    CONSTRAINT fk_messages_repondu_par 
+        FOREIGN KEY (repondu_par) 
+        REFERENCES users(id) 
+        ON DELETE SET NULL
+);
 -- ------------------------------------------------------------
 -- UTILISATEUR ADMIN PAR DÉFAUT
 -- ------------------------------------------------------------
@@ -106,6 +139,23 @@ CREATE INDEX idx_experiences_display_order ON experiences(display_order);
 CREATE INDEX idx_experiences_current_job ON experiences(current_job);
 CREATE INDEX idx_experiences_display_in_portfolio ON experiences(display_in_portfolio);
 
+
+
+-- ------------------------------------------------------------
+-- INDEX POUR LES PERFORMANCES
+-- ------------------------------------------------------------
+CREATE INDEX idx_messages_email ON messages(email);
+CREATE INDEX idx_messages_lu ON messages(lu);
+CREATE INDEX idx_messages_archive ON messages(archive);
+CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
+CREATE INDEX idx_messages_repondu_par ON messages(repondu_par);
+
+-- Index composite utile pour l'admin
+CREATE INDEX idx_messages_admin_view 
+    ON messages(lu, archive, created_at DESC);
+
+
+
 -- ------------------------------------------------------------
 -- TRIGGER POUR METTRE À JOUR updated_at
 -- ------------------------------------------------------------
@@ -127,6 +177,21 @@ DELIMITER $$
 
 CREATE TRIGGER update_experiences_timestamp 
 BEFORE UPDATE ON experiences
+FOR EACH ROW
+BEGIN
+    SET NEW.updated_at = CURRENT_TIMESTAMP;
+END $$
+
+DELIMITER ;
+
+
+-- ------------------------------------------------------------
+-- TRIGGER POUR METTRE À JOUR updated_at
+-- ------------------------------------------------------------
+DELIMITER $$
+
+CREATE TRIGGER update_messages_timestamp 
+BEFORE UPDATE ON messages
 FOR EACH ROW
 BEGIN
     SET NEW.updated_at = CURRENT_TIMESTAMP;
